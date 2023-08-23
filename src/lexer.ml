@@ -43,10 +43,8 @@ let isalnum (c : char) : bool = isalpha c || isnum c
 let isignorable (c : char) : bool = c = ' ' || c = '\n' || c = '\t'
 
 (* Will consume characters given the predicate `cond`.
-   If this function is being passed a pattern matched list,
-   `hd` & `tl`, then `hd` should be @ `tl`. Will NOT consume
-   the character that fails `cond`. This is expected to be 
-   done by caller. *)
+   Will NOT consume the character that fails `cond`.
+   This is expected to be done by caller. *)
 let consume_while (lst : char list) (cond : char -> bool) : string * char list =
   let rec aux (lst : char list) (acc : string) : string * char list =
     match lst with
@@ -72,11 +70,10 @@ let parse_code (src : string) : lexer_t =
        (match is_identifier hd with
         | Some id -> parse_code' tl (acc @ [Token.token_create_wchar hd id])
         | None ->
-           (* Multichar token *)
-           (* NOTE: consume_while does not consume failing char! *)
-           (* isalpha hd -> is a variable/function name *)
-           (* isnum hd -> is an integer literal *)
-           (* hd = '"' -> is a string literal *)
+           (* Multichar token
+              - isalpha hd -> is a variable/function name
+              - isnum hd -> is an integer literal
+              - hd = '"' -> is a string literal *)
            (if isalpha hd then
               let multichar, rest = consume_while (hd :: tl) isalnum in
               match is_keyword multichar with
@@ -89,7 +86,7 @@ let parse_code (src : string) : lexer_t =
 
             else if hd = '"' then
               let str, rest = consume_while tl (fun c -> c <> '"') in
-              (* (List.tl rest) to consume extra '"' *)
+              (* (List.tl rest) to consume extra quote *)
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
             else
