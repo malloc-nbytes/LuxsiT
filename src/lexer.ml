@@ -11,7 +11,8 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "str" Token.Str in
   let _ = Hashtbl.add keywords "proc" Token.Proc in
   let _ = Hashtbl.add keywords "ret" Token.Ret in
-  Hashtbl.add keywords "i32" Token.I32
+  let _ = Hashtbl.add keywords "i32" Token.I32 in
+  ()
 
 type lexer_t =
   { tokens : Token.token_t list }
@@ -32,6 +33,11 @@ let isalnum (c : char) : bool = isalpha c || isnum c
 
 let isignorable (c : char) : bool = c = ' ' || c = '\n' || c = '\t'
 
+(* Will consume characters given the predicate `cond`.
+   If this function is being passed a pattern matched list,
+   `hd` & `tl`, then `hd` should be @ `tl`. Will NOT consume
+   the character that fails `cond`. This is expected to be 
+   done by caller. *)
 let consume_while (lst : char list) (cond : char -> bool) : string * char list =
   let rec aux (lst : char list) (acc : string) : string * char list =
     match lst with
@@ -63,21 +69,23 @@ let parse_code (src : string) : lexer_t =
     | hd :: tl when isignorable hd -> parse_code' tl acc
     | hd :: tl ->
        (* Multichar token *)
-       if isalpha hd then       (* is a variable/function name *)
+       (* NOTE: consume_while does not consume failing char! *)
+       if isalpha hd then       (* Is a variable/function name. *)
          let multichar, rest = consume_while (hd :: tl) isalnum in
          match is_keyword multichar with
          | None -> parse_code' rest (acc @ [Token.token_create_wstr multichar Token.ID])
          | Some tokentype -> parse_code' rest (acc @ [Token.token_create_wstr multichar tokentype])
 
-       else if isnum hd then    (* is an integer literal *)
+       else if isnum hd then    (* Is an integer literal. *)
          let intlit, rest = consume_while (hd :: tl) isnum in
          parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
 
-       else if hd = '"' then
+       else if hd = '"' then    (* Is a string literal. *)
          let str, rest = consume_while tl (fun c -> c <> '"') in
-         (* List.tl rest to consume extra '"' *)
+         (* (List.tl rest) to consume extra '"' *)
          parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
-       else                     (* something else *)
+
+       else                     (* Something else. *)
          failwith (Printf.sprintf "unrecognized token %c (CODE: %d)\n" hd (int_of_char hd))
   in
   parse_code' (src |> String.to_seq |> List.of_seq) []
