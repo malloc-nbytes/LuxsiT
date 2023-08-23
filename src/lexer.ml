@@ -1,9 +1,3 @@
-let read_whole_file filename =
-  let ch = open_in_bin filename in
-  let s = really_input_string ch (in_channel_length ch) in
-  close_in ch;
-  s
-
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
 let populate_keywords () =
@@ -111,7 +105,16 @@ let lexer_dump (lexer : lexer_t) : unit =
     ) lexer.tokens
 
 let filepath = "./input.txt"
+
 let () =
+
+  let read_whole_file filename =
+    let ch = open_in_bin filename in
+    let s = really_input_string ch (in_channel_length ch) in
+    close_in ch;
+
+    s in
+
   let _ = populate_keywords () in
   let src = read_whole_file filepath in
   let lexer = parse_code src in
