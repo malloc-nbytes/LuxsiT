@@ -8,6 +8,9 @@
 *.cmxs
 *.cmxa
 
+# bin names
+lexer
+
 # ocamlbuild working directory
 _build/
 
