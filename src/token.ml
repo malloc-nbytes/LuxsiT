@@ -3,9 +3,15 @@ type tokentype_t =
   | Str
   | I32
   | U32
+  | Polymorphic
+  | Struct
 
   (* Other. *)
   | Let
+  | End
+  | GreaterThan
+  | LessThan
+  | Comma
   | Ret
   | Colon
   | Proc
@@ -35,12 +41,18 @@ let token_print (token : token_t) : unit =
   | Str -> Printf.printf "Str: %s\n" token.data
   | I32 -> Printf.printf "I32: %s\n" token.data
   | U32 -> Printf.printf "U32: %s\n" token.data
+  | Struct -> Printf.printf "Struct: %s\n" token.data
+  | Polymorphic -> Printf.printf "Polymorphic: %s\n" token.data
   | Colon -> Printf.printf "Colon: %s\n" token.data
   | SemiColon -> Printf.printf "SemiColon: %s\n" token.data
+  | GreaterThan -> Printf.printf "GreaterThan: %s\n" token.data
+  | LessThan -> Printf.printf "LessThan: %s\n" token.data
+  | End -> Printf.printf "End: %s\n" token.data
   | Proc -> Printf.printf "Proc: %s\n" token.data
   | Ret -> Printf.printf "Ret: %s\n" token.data
   | LParen -> Printf.printf "LParen: %s\n" token.data
   | RParen -> Printf.printf "RParen: %s\n" token.data
+  | Comma -> Printf.printf "Comma: %s\n" token.data
   | ID -> Printf.printf "ID: %s\n" token.data
   | IntegerLiteral -> Printf.printf "IntegerLiteral: %s\n" token.data
   | StringLiteral -> Printf.printf "StringLiteral: %s\n" token.data

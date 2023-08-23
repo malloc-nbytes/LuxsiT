@@ -12,10 +12,13 @@ let populate_identifiers () =
   let _ = Hashtbl.add identifiers '=' Token.Equals in
   let _ = Hashtbl.add identifiers ':' Token.Colon in
   let _ = Hashtbl.add identifiers ';' Token.SemiColon in
+  let _ = Hashtbl.add identifiers ',' Token.Comma in
   let _ = Hashtbl.add identifiers '+' Token.Binop in
   let _ = Hashtbl.add identifiers '-' Token.Binop in
   let _ = Hashtbl.add identifiers '/' Token.Binop in
   let _ = Hashtbl.add identifiers '*' Token.Binop in
+  let _ = Hashtbl.add identifiers '<' Token.LessThan in
+  let _ = Hashtbl.add identifiers '>' Token.GreaterThan in
   ()
 
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
@@ -27,6 +30,8 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "ret" Token.Ret in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
   let _ = Hashtbl.add keywords "u32" Token.U32 in
+  let _ = Hashtbl.add keywords "struct" Token.Struct in
+  let _ = Hashtbl.add keywords "end" Token.End in
   ()
 
 let isalpha (c : char) : bool =
@@ -83,6 +88,10 @@ let parse_code (src : string) : lexer_t =
             else if isnum hd then
               let intlit, rest = consume_while (hd :: tl) isnum in
               parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
+
+            else if hd = '\'' then
+              let poly, rest = consume_while tl (fun c -> not (isnum c) && not (isignorable c)) in
+              parse_code' rest (acc @ [Token.token_create_wstr poly Token.Polymorphic])
 
             else if hd = '"' then
               let str, rest = consume_while tl (fun c -> c <> '"') in

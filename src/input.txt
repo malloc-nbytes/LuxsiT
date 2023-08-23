@@ -1,5 +1,14 @@
-proc print arg: u32 :: () =
-  std::io::print arg
+struct TestStruct =
+  x: i32,
+  y: i32
+end
+
+proc print arg: 'a :: () =
+  std::io::print arg;
+  ret ();
+
+proc test x: u32 -> y: u32 :: u32 =
+  ret x + y;
 
 proc main () :: i32 =
   let name: str = "Hello World";
