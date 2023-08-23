@@ -1,16 +1,9 @@
-(* Supported tokens:
-   1. proc
-   2. IDs
-   3. :
-   4. (
-   5. )
-   6. ;
-   7. String literals
-   8. Integer literals
-   9. ret
- *)
+type lexer_t =
+  { tokens : Token.token_t list }
 
-let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+let lexer_create (tokens : Token.token_t list) : lexer_t =
+  { tokens = tokens }
+
 let identifiers : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
 let populate_identifiers () =
@@ -25,19 +18,16 @@ let populate_identifiers () =
   let _ = Hashtbl.add identifiers '*' Token.Binop in
   ()
 
+let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+
 let populate_keywords () =
   let _ = Hashtbl.add keywords "let" Token.Let in
   let _ = Hashtbl.add keywords "str" Token.Str in
   let _ = Hashtbl.add keywords "proc" Token.Proc in
   let _ = Hashtbl.add keywords "ret" Token.Ret in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
+  let _ = Hashtbl.add keywords "u32" Token.U32 in
   ()
-
-type lexer_t =
-  { tokens : Token.token_t list }
-
-let lexer_create (tokens : Token.token_t list) : lexer_t =
-  { tokens = tokens }
 
 let isalpha (c : char) : bool =
   let c = int_of_char c in
@@ -108,28 +98,11 @@ let parse_code (src : string) : lexer_t =
   parse_code' (src |> String.to_seq |> List.of_seq) []
 
 let lexer_dump (lexer : lexer_t) : unit =
-  List.iter (fun token ->
-      match token.Token.tokentype with
-      | Token.Let -> Printf.printf "Let: %s\n" token.Token.data
-      | Token.Str -> Printf.printf "Str: %s\n" token.Token.data
-      | Token.I32 -> Printf.printf "I32: %s\n" token.Token.data
-      | Token.Colon -> Printf.printf "Colon: %s\n" token.Token.data
-      | Token.SemiColon -> Printf.printf "SemiColon: %s\n" token.Token.data
-      | Token.Proc -> Printf.printf "Proc: %s\n" token.Token.data
-      | Token.Ret -> Printf.printf "Ret: %s\n" token.Token.data
-      | Token.LParen -> Printf.printf "LParen: %s\n" token.Token.data
-      | Token.RParen -> Printf.printf "RParen: %s\n" token.Token.data
-      | Token.ID -> Printf.printf "ID: %s\n" token.Token.data
-      | Token.IntegerLiteral -> Printf.printf "IntegerLiteral: %s\n" token.Token.data
-      | Token.StringLiteral -> Printf.printf "StringLiteral: %s\n" token.Token.data
-      | Token.Equals -> Printf.printf "Equals: %s\n" token.Token.data
-      | Token.Binop -> Printf.printf "Binop: %s\n" token.Token.data
-      | Token.EOF -> Printf.printf "EOF: %s\n" token.Token.data
-    ) lexer.tokens
+  List.iter (fun token -> Token.token_print token) lexer.tokens
 
-let filepath = "./input.txt"
 
 let () =
+  let filepath = "./input.txt" in
 
   let read_whole_file filename =
     let ch = open_in_bin filename in

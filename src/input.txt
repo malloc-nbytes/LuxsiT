@@ -1,6 +1,9 @@
+proc print arg: u32 :: () =
+  std::io::print arg
+
 proc main () :: i32 =
   let name: str = "Hello World";
   let age: i32 = 22;
-  print(name);
-  print(age);
+  print name;
+  print age;
   ret 0;
