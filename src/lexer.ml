@@ -1,4 +1,29 @@
+(* Supported tokens:
+   1. proc
+   2. IDs
+   3. :
+   4. (
+   5. )
+   6. ;
+   7. String literals
+   8. Integer literals
+   9. ret
+ *)
+
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+let identifiers : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+
+let populate_identifiers () =
+  let _ = Hashtbl.add identifiers '(' Token.LParen in
+  let _ = Hashtbl.add identifiers ')' Token.RParen in
+  let _ = Hashtbl.add identifiers '=' Token.Equals in
+  let _ = Hashtbl.add identifiers ':' Token.Colon in
+  let _ = Hashtbl.add identifiers ';' Token.SemiColon in
+  let _ = Hashtbl.add identifiers '+' Token.Binop in
+  let _ = Hashtbl.add identifiers '-' Token.Binop in
+  let _ = Hashtbl.add identifiers '/' Token.Binop in
+  let _ = Hashtbl.add identifiers '*' Token.Binop in
+  ()
 
 let populate_keywords () =
   let _ = Hashtbl.add keywords "let" Token.Let in
@@ -44,43 +69,41 @@ let is_keyword (str : string) : Token.tokentype_t option =
   try Some (Hashtbl.find keywords str)
   with Not_found -> None
 
+let is_identifier (c : char) : Token.tokentype_t option =
+  try Some (Hashtbl.find identifiers c)
+  with Not_found -> None
+
 let parse_code (src : string) : lexer_t =
   let rec parse_code' (lst : char list) (acc : Token.token_t list) : lexer_t =
     match lst with
     | [] -> lexer_create (acc @ [Token.token_create_wstr "EOF" Token.EOF])
-    | hd :: tl when hd = '(' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.RParen])
-    | hd :: tl when hd = ')' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.LParen])
-    | hd :: tl when hd = '=' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.Equals])
-    | hd :: tl when hd = ':' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.Colon])
-    | hd :: tl when hd = ';' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.SemiColon])
-    | hd :: tl when hd = '+' || hd = '-' || hd = '*' || hd = '/' ->
-       parse_code' tl (acc @ [Token.token_create_wchar hd Token.Binop])
     | hd :: tl when isignorable hd -> parse_code' tl acc
     | hd :: tl ->
-       (* Multichar token *)
-       (* NOTE: consume_while does not consume failing char! *)
-       if isalpha hd then       (* Is a variable/function name. *)
-         let multichar, rest = consume_while (hd :: tl) isalnum in
-         match is_keyword multichar with
-         | None -> parse_code' rest (acc @ [Token.token_create_wstr multichar Token.ID])
-         | Some tokentype -> parse_code' rest (acc @ [Token.token_create_wstr multichar tokentype])
+       (match is_identifier hd with
+        | Some id -> parse_code' tl (acc @ [Token.token_create_wchar hd id])
+        | None ->
+           (* Multichar token *)
+           (* NOTE: consume_while does not consume failing char! *)
+           (* isalpha hd -> is a variable/function name *)
+           (* isnum hd -> is an integer literal *)
+           (* hd = '"' -> is a string literal *)
+           (if isalpha hd then
+              let multichar, rest = consume_while (hd :: tl) isalnum in
+              match is_keyword multichar with
+              | None -> parse_code' rest (acc @ [Token.token_create_wstr multichar Token.ID])
+              | Some tokentype -> parse_code' rest (acc @ [Token.token_create_wstr multichar tokentype])
 
-       else if isnum hd then    (* Is an integer literal. *)
-         let intlit, rest = consume_while (hd :: tl) isnum in
-         parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
+            else if isnum hd then
+              let intlit, rest = consume_while (hd :: tl) isnum in
+              parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
 
-       else if hd = '"' then    (* Is a string literal. *)
-         let str, rest = consume_while tl (fun c -> c <> '"') in
-         (* (List.tl rest) to consume extra '"' *)
-         parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
+            else if hd = '"' then
+              let str, rest = consume_while tl (fun c -> c <> '"') in
+              (* (List.tl rest) to consume extra '"' *)
+              parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
-       else                     (* Something else. *)
-         failwith (Printf.sprintf "unrecognized token %c (CODE: %d)\n" hd (int_of_char hd))
+            else
+              failwith (Printf.sprintf "unrecognized token %c (CODE: %d)\n" hd (int_of_char hd)) ))
   in
   parse_code' (src |> String.to_seq |> List.of_seq) []
 
@@ -116,6 +139,7 @@ let () =
     s in
 
   let _ = populate_keywords () in
+  let _ = populate_identifiers () in
   let src = read_whole_file filepath in
   let lexer = parse_code src in
   lexer_dump lexer
