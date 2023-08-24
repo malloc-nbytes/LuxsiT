@@ -3,7 +3,7 @@ type tokentype_t =
   | Str
   | I32
   | U32
-  | Polymorphic
+  | Char
   | Struct
 
   (* Other. *)
@@ -20,6 +20,7 @@ type tokentype_t =
   | RParen
   | ID
   | StringLiteral
+  | CharLiteral
   | IntegerLiteral
   | Equals
   | Binop
@@ -37,25 +38,26 @@ let token_create_wstr (data : string) (tokentype : tokentype_t) : token_t =
 
 let token_print (token : token_t) : unit =
   match token.tokentype with
-  | Let -> Printf.printf "Let: %s\n" token.data
-  | Str -> Printf.printf "Str: %s\n" token.data
-  | I32 -> Printf.printf "I32: %s\n" token.data
-  | U32 -> Printf.printf "U32: %s\n" token.data
-  | Struct -> Printf.printf "Struct: %s\n" token.data
-  | Polymorphic -> Printf.printf "Polymorphic: %s\n" token.data
-  | Colon -> Printf.printf "Colon: %s\n" token.data
-  | SemiColon -> Printf.printf "SemiColon: %s\n" token.data
-  | GreaterThan -> Printf.printf "GreaterThan: %s\n" token.data
-  | LessThan -> Printf.printf "LessThan: %s\n" token.data
-  | End -> Printf.printf "End: %s\n" token.data
-  | Proc -> Printf.printf "Proc: %s\n" token.data
-  | Ret -> Printf.printf "Ret: %s\n" token.data
-  | LParen -> Printf.printf "LParen: %s\n" token.data
-  | RParen -> Printf.printf "RParen: %s\n" token.data
-  | Comma -> Printf.printf "Comma: %s\n" token.data
+  | Let -> Printf.printf "Let\n"
+  | Str -> Printf.printf "Str\n"
+  | I32 -> Printf.printf "I32\n"
+  | U32 -> Printf.printf "U32\n"
+  | Char -> Printf.printf "Char\n"
+  | Struct -> Printf.printf "Struct\n"
+  | Colon -> Printf.printf "Colon\n"
+  | SemiColon -> Printf.printf "SemiColon\n"
+  | GreaterThan -> Printf.printf "GreaterThan\n"
+  | LessThan -> Printf.printf "LessThan\n"
+  | End -> Printf.printf "End\n"
+  | Proc -> Printf.printf "Proc\n"
+  | Ret -> Printf.printf "Ret\n"
+  | LParen -> Printf.printf "LParen\n"
+  | RParen -> Printf.printf "RParen\n"
+  | Comma -> Printf.printf "Comma\n"
   | ID -> Printf.printf "ID: %s\n" token.data
   | IntegerLiteral -> Printf.printf "IntegerLiteral: %s\n" token.data
   | StringLiteral -> Printf.printf "StringLiteral: %s\n" token.data
-  | Equals -> Printf.printf "Equals: %s\n" token.data
+  | CharLiteral -> Printf.printf "CharLiteral: %s\n" token.data
+  | Equals -> Printf.printf "Equals\n"
   | Binop -> Printf.printf "Binop: %s\n" token.data
-  | EOF -> Printf.printf "EOF: %s\n" token.data
+  | EOF -> Printf.printf "EOF\n"

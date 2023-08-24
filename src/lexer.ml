@@ -30,6 +30,7 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "ret" Token.Ret in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
   let _ = Hashtbl.add keywords "u32" Token.U32 in
+  let _ = Hashtbl.add keywords "char" Token.Char in
   let _ = Hashtbl.add keywords "struct" Token.Struct in
   let _ = Hashtbl.add keywords "end" Token.End in
   ()
@@ -78,7 +79,9 @@ let parse_code (src : string) : lexer_t =
            (* Multichar token
               - isalpha hd -> is a variable/function name
               - isnum hd -> is an integer literal
-              - hd = '"' -> is a string literal *)
+              - hd = '"' -> is a string literal 
+              - hd = '/'' -> is a char literal
+              - hd = '"' -> hd is a string literal *)
            (if isalpha hd then
               let multichar, rest = consume_while (hd :: tl) isalnum in
               match is_keyword multichar with
@@ -90,8 +93,11 @@ let parse_code (src : string) : lexer_t =
               parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
 
             else if hd = '\'' then
-              let poly, rest = consume_while tl (fun c -> not (isnum c) && not (isignorable c)) in
-              parse_code' rest (acc @ [Token.token_create_wstr poly Token.Polymorphic])
+              let charlit, rest = consume_while tl (fun c -> c <> '\'') in
+              parse_code' (List.tl rest) (acc @ [Token.token_create_wstr charlit Token.CharLiteral])
+              (* failwith "TODO: ignore polymorphic and treat as char" *)
+              (* let poly, rest = consume_while tl (fun c -> not (isnum c) && not (isignorable c)) in *)
+              (* parse_code' rest (acc @ [Token.token_create_wstr poly Token.Polymorphic]) *)
 
             else if hd = '"' then
               let str, rest = consume_while tl (fun c -> c <> '"') in
@@ -99,13 +105,12 @@ let parse_code (src : string) : lexer_t =
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
             else
-              failwith (Printf.sprintf "unrecognized token %c (CODE: %d)\n" hd (int_of_char hd)) ))
+              failwith (Printf.sprintf "unsupported char %c (CODE: %d)\n" hd (int_of_char hd)) ))
   in
   parse_code' (src |> String.to_seq |> List.of_seq) []
 
 let lexer_dump (lexer : lexer_t) : unit =
   List.iter (fun token -> Token.token_print token) lexer.tokens
-
 
 let () =
   let filepath = "./input.txt" in
