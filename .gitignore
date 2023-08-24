@@ -10,6 +10,8 @@
 
 # bin names
 lexer
+parser
+ast
 
 # ocamlbuild working directory
 _build/

@@ -1,0 +1,7 @@
+#+TITLE: Grammar
+
+=ret= $\rightarrow$ /ret/ =expr=
+
+=expr= $\rightarrow$ /integer literal/
+
+

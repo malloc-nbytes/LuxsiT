@@ -37,6 +37,34 @@ let token_create_wchar (data : char) (tokentype : tokentype_t) : token_t =
 let token_create_wstr (data : string) (tokentype : tokentype_t) : token_t =
   { data = data; tokentype = tokentype }
 
+let print_tokentype (tokentype : tokentype_t) : unit =
+  match tokentype with
+  | Let -> print_endline "Let"
+  | Str -> print_endline "Str"
+  | I32 -> print_endline "I32"
+  | U32 -> print_endline "U32"
+  | Int -> print_endline "Int"
+  | Char -> print_endline "Char"
+  | Struct -> print_endline "Struct"
+  | Colon -> print_endline "Colon"
+  | SemiColon -> print_endline "SemiColon"
+  | GreaterThan -> print_endline "GreaterThan"
+  | LessThan -> print_endline "LessThan"
+  | End -> print_endline "End"
+  | Proc -> print_endline "Proc"
+  | Ret -> print_endline "Ret"
+  | LParen -> print_endline "LParen"
+  | RParen -> print_endline "RParen"
+  | Comma -> print_endline "Comma"
+  | ID -> print_endline "ID"
+  | IntegerLiteral -> print_endline "IntegerLiteral"
+  | StringLiteral -> print_endline "StringLiteral"
+  | CharLiteral -> print_endline "CharLiteral"
+  | Equals -> print_endline "Equals"
+  | Binop -> print_endline "Binop"
+  | EOF -> print_endline "EOF"
+
+
 let token_print (token : token_t) : unit =
   match token.tokentype with
   | Let -> Printf.printf "Let\n"
