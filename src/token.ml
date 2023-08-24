@@ -2,6 +2,7 @@ type tokentype_t =
   (* Datatypes *)
   | Str
   | I32
+  | Int
   | U32
   | Char
   | Struct
@@ -42,6 +43,7 @@ let token_print (token : token_t) : unit =
   | Str -> Printf.printf "Str\n"
   | I32 -> Printf.printf "I32\n"
   | U32 -> Printf.printf "U32\n"
+  | Int -> Printf.printf "Int\n"
   | Char -> Printf.printf "Char\n"
   | Struct -> Printf.printf "Struct\n"
   | Colon -> Printf.printf "Colon\n"

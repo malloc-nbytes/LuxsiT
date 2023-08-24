@@ -1,6 +1,7 @@
 proc main :: () =
-  let x: i32 = 5;
-  let y: i32 = 9;
+  let x: int = 5;
+  let tmp_variable: int = 7;
+  let y: int = 9;
   let c: char = 'a';
   testfunc x y;
   ret ()

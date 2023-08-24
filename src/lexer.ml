@@ -4,21 +4,21 @@ type lexer_t =
 let lexer_create (tokens : Token.token_t list) : lexer_t =
   { tokens = tokens }
 
-let identifiers : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+let symbols : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
-let populate_identifiers () =
-  let _ = Hashtbl.add identifiers '(' Token.LParen in
-  let _ = Hashtbl.add identifiers ')' Token.RParen in
-  let _ = Hashtbl.add identifiers '=' Token.Equals in
-  let _ = Hashtbl.add identifiers ':' Token.Colon in
-  let _ = Hashtbl.add identifiers ';' Token.SemiColon in
-  let _ = Hashtbl.add identifiers ',' Token.Comma in
-  let _ = Hashtbl.add identifiers '+' Token.Binop in
-  let _ = Hashtbl.add identifiers '-' Token.Binop in
-  let _ = Hashtbl.add identifiers '/' Token.Binop in
-  let _ = Hashtbl.add identifiers '*' Token.Binop in
-  let _ = Hashtbl.add identifiers '<' Token.LessThan in
-  let _ = Hashtbl.add identifiers '>' Token.GreaterThan in
+let populate_symbols () =
+  let _ = Hashtbl.add symbols '(' Token.LParen in
+  let _ = Hashtbl.add symbols ')' Token.RParen in
+  let _ = Hashtbl.add symbols '=' Token.Equals in
+  let _ = Hashtbl.add symbols ':' Token.Colon in
+  let _ = Hashtbl.add symbols ';' Token.SemiColon in
+  let _ = Hashtbl.add symbols ',' Token.Comma in
+  let _ = Hashtbl.add symbols '+' Token.Binop in
+  let _ = Hashtbl.add symbols '-' Token.Binop in
+  let _ = Hashtbl.add symbols '/' Token.Binop in
+  let _ = Hashtbl.add symbols '*' Token.Binop in
+  let _ = Hashtbl.add symbols '<' Token.LessThan in
+  let _ = Hashtbl.add symbols '>' Token.GreaterThan in
   ()
 
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
@@ -29,6 +29,7 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "proc" Token.Proc in
   let _ = Hashtbl.add keywords "ret" Token.Ret in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
+  let _ = Hashtbl.add keywords "int" Token.Int in
   let _ = Hashtbl.add keywords "u32" Token.U32 in
   let _ = Hashtbl.add keywords "char" Token.Char in
   let _ = Hashtbl.add keywords "struct" Token.Struct in
@@ -64,7 +65,7 @@ let is_keyword (str : string) : Token.tokentype_t option =
   with Not_found -> None
 
 let is_identifier (c : char) : Token.tokentype_t option =
-  try Some (Hashtbl.find identifiers c)
+  try Some (Hashtbl.find symbols c)
   with Not_found -> None
 
 let parse_code (src : string) : lexer_t =
@@ -82,8 +83,8 @@ let parse_code (src : string) : lexer_t =
               - hd = '"' -> is a string literal 
               - hd = '/'' -> is a char literal
               - hd = '"' -> hd is a string literal *)
-           (if isalpha hd then
-              let multichar, rest = consume_while (hd :: tl) isalnum in
+           (if isalpha hd || hd = '_' then
+              let multichar, rest = consume_while (hd :: tl) (fun k -> isalnum k || k = '_') in
               match is_keyword multichar with
               | None -> parse_code' rest (acc @ [Token.token_create_wstr multichar Token.ID])
               | Some tokentype -> parse_code' rest (acc @ [Token.token_create_wstr multichar tokentype])
@@ -123,7 +124,7 @@ let () =
     s in
 
   let _ = populate_keywords () in
-  let _ = populate_identifiers () in
+  let _ = populate_symbols () in
   let src = read_whole_file filepath in
   let lexer = parse_code src in
   lexer_dump lexer

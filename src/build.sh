@@ -2,5 +2,5 @@
 
 set -xe
 
-ocamlc -o lexer token.ml lexer.ml
-./lexer
+ocamlc -o parser token.ml parser.ml
+./parser
