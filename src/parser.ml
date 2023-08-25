@@ -16,8 +16,8 @@ type node_stmt_exit =
   { expr : node_expr_t }
 
 type node_stmt_t =
-  | NodeStmtExit
-  | NodeStmtLet
+  | NodeStmtExit of node_expr_t
+  | NodeStmtLet of node_stmt_let
 
 type node_prog_t =
   { stmts : node_stmt_t list }
@@ -62,6 +62,31 @@ let parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   | _ ->
      let _ = err "cannot create expression" in
      failwith "parser error"
+
+let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
+  match peek p with
+  | Some t when t.tokentype = Token.Exit ->
+     let p, _ = eat p in        (* eat exit *)
+     let p, _ = expect p Token.LParen in
+     let p, node_expr = parse_expr p in
+     (match node_expr with
+      | Some expr ->
+         let p, _ = expect p Token.RParen in
+         p, Some (NodeStmtExit expr)
+      | None ->
+         let _ = err "expected an expression after 'exit('" in
+         failwith "parser error")
+  | Some t when t.tokentype = Token.Let ->
+     let p, _ = eat p in        (* eat let *)
+     let p, id = expect p Token.ID in
+     let p, _ = expect p Token.Equals in
+     let p, expr = parse_expr p in
+     (match expr with
+      | Some e -> p, Some (NodeStmtLet { id = id; expr = e })
+      | None ->
+         let _ = err "Expected an expression after 'let id ='" in
+         failwith "parser error")
+  | _ -> p, None (* no stmt found *)
 
 let rec parse_exit (p : parser_t) : node_exit_t option =
   let rec parse_exit' (p : parser_t) (node_exit : node_exit_t option) : node_exit_t option =
