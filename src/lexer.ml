@@ -13,7 +13,7 @@ let populate_symbols () =
   let _ = Hashtbl.add symbols ';' Token.SemiColon in
   let _ = Hashtbl.add symbols ',' Token.Comma in
   let _ = Hashtbl.add symbols '+' Token.Binop in
-  let _ = Hashtbl.add symbols '-' Token.Binop in
+  (* let _ = Hashtbl.add symbols '-' Token.Binop in *) (* this is omitted because of -> *)
   let _ = Hashtbl.add symbols '/' Token.Binop in
   let _ = Hashtbl.add symbols '*' Token.Binop in
   let _ = Hashtbl.add symbols '<' Token.LessThan in
@@ -25,6 +25,7 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "str" Token.Str in
   let _ = Hashtbl.add keywords "proc" Token.Proc in
   let _ = Hashtbl.add keywords "ret" Token.Ret in
+  let _ = Hashtbl.add keywords "exit" Token.Exit in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
   let _ = Hashtbl.add keywords "int" Token.Int in
   let _ = Hashtbl.add keywords "u32" Token.U32 in
@@ -68,6 +69,14 @@ let is_identifier (c : char) : Token.tokentype_t option =
   try Some (Hashtbl.find symbols c)
   with Not_found -> None
 
+let peek (lst : char list) (ahead : int) : char option =
+  let rec peek' (lst : char list) (i : int) : char option =
+    match lst with
+    | [] -> None
+    | hd :: _ when i = ahead -> Some hd
+    | _ :: tl -> peek' tl (i + 1) in
+  peek' lst 0
+
 let parse_code (src : string) : lexer_t =
   let rec parse_code' (lst : char list) (acc : Token.token_t list) : lexer_t =
     match lst with
@@ -103,8 +112,14 @@ let parse_code (src : string) : lexer_t =
               (* (List.tl rest) to consume extra quote *)
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
+            else if hd = '-' then
+              match peek tl 0 with
+              | Some k when k = '>' -> parse_code' (List.tl tl) (acc @ [Token.token_create_wstr "->" Token.RightArrow])
+              | Some k -> parse_code' tl (acc @ [Token.token_create_wchar hd Token.Binop])
+              | None -> failwith "Lexer ERR: found `None` when parsing `-`"
+
             else
-              failwith (Printf.sprintf "unsupported char %c (CODE: %d)\n" hd (int_of_char hd)) ))
+              failwith (Printf.sprintf "Lexer ERR: unsupported char %c (CODE: %d)\n" hd (int_of_char hd)) ))
   in
   let _ = populate_keywords () in
   let _ = populate_symbols () in

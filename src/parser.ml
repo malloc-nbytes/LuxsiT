@@ -1,17 +1,32 @@
-type node_expr_t =
+type node_expr_intlit =
   { intlit : Token.token_t }
 
-type node_ret_t =
+type node_expr_id =
+  { id : Token.token_t }
+
+type node_expr_t =
+  | NodeExprIntlit of node_expr_intlit
+  | NodeExprId of node_expr_id
+
+type node_stmt_let =
+  { id : Token.token_t;
+    expr : node_expr_t }
+
+type node_stmt_exit =
   { expr : node_expr_t }
 
-let node_expr_create (intlit : Token.token_t) : node_expr_t =
-  { intlit = intlit }
+type node_stmt_t =
+  | NodeStmtExit
+  | NodeStmtLet
 
-let node_ret_create (expr : node_expr_t) : node_ret_t =
-  { expr = expr }
+type node_prog_t =
+  { stmts : node_stmt_t list }
 
 type parser_t =
   { tokens: Token.token_t list }
+
+let err (msg : string) : unit =
+  Printf.printf "(ERR): %s\n" msg
 
 let parser_create (tokens : Token.token_t list) : parser_t =
   { tokens = tokens }
@@ -33,32 +48,38 @@ let eat (p : parser_t) : parser_t * (Token.token_t option) =
 let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   let hd = List.hd p.tokens and tl = List.tl p.tokens in
   if hd.tokentype <> expected_type then
-    let _ = Printf.printf "unexpected token \"%s\" expected: %s\n" hd.data (Token.get_tokentype_as_str expected_type) in
-    failwith "parse ERR"
+    let _ = err ("unexpected token \"" ^ hd.data ^ "\" expected: " ^ (Token.get_tokentype_as_str expected_type)) in
+    failwith "parser error"
   else
     parser_create tl, hd
 
 let parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, token = eat p in
   match token with
-  | Some t -> p, Some (node_expr_create t)
+  | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
+  | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
+  | _ ->
+     let _ = err "cannot create expression" in
+     failwith "parser error"
 
-let rec parse (p : parser_t) : node_ret_t option =
-  let rec parse' (p : parser_t) (node_ret : node_ret_t option) : node_ret_t option =
+let rec parse_exit (p : parser_t) : node_exit_t option =
+  let rec parse_exit' (p : parser_t) (node_exit : node_exit_t option) : node_exit_t option =
     match peek p with
-    | None -> node_ret
-    | Some t when t.tokentype = Token.EOF -> node_ret
-    | Some t when t.tokentype = Token.Ret ->
-       let p, _ = eat p in    (* eat `ret` *)
+    | None -> node_exit
+    | Some t when t.tokentype = Token.EOF -> node_exit
+    | Some t when t.tokentype = Token.Exit ->
+       let p, _ = eat p in    (* eat `exit` *)
+       let p, _ = expect p Token.LParen in
        let p, node_expr = parse_expr p in
-       let p, _ = expect p Token.SemiColon in (* eat `;` *)
+       let p, _ = expect p Token.RParen in
+       let p, _ = expect p Token.SemiColon in
        (match node_expr with
-        | Some expr -> parse' p (Some (node_ret_create expr))
-        | None -> failwith "invalid expression")
+        | Some expr -> parse_exit' p (Some (node_exit_create expr))
+        | None -> failwith "(ERR) invalid expression")
     | Some t ->
-       let _ = Printf.printf "unimplemented token: %s\n" (Token.get_tokentype_as_str t.tokentype) in
-       failwith "unimplemented token error"
+       let _ = err ("unimplemented token: " ^ (Token.get_tokentype_as_str t.tokentype) ^ "\n") in
+       failwith "parser error"
   in
-  parse' p None
+  parse_exit' p None
 

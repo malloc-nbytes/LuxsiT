@@ -1,7 +1,7 @@
 #+TITLE: Grammar
 
-=ret= $\rightarrow$ /ret/ =expr=
+=program= $\rightarrow$ [ =stmt= ] *
 
-=expr= $\rightarrow$ /integer literal/
+=stmt= $\rightarrow$ { =exit=, =let= /ID/ = =expr= =;=}
 
-
+=expr= $\rightarrow$ { /integer literal/, /ID/ }

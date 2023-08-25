@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2023-08-24 Thu 18:04 -->
+<!-- 2023-08-24 Thu 21:57 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Grammar</title>
@@ -266,16 +266,20 @@ for the JavaScript code in this tag.
 <div id="content">
 <h1 class="title">Grammar</h1>
 <p>
-<code>ret</code> \(\rightarrow\) <i>ret</i> <code>expr</code>
+<code>program</code> \(\rightarrow\) [ <code>stmt</code> ] *
 </p>
 
 <p>
-<code>expr</code> \(\rightarrow\) <i>integer literal</i>
+<code>stmt</code> \(\rightarrow\) { <code>exit</code>, <code>let</code> <i>ID</i> = <code>expr</code> <code>;</code>}
+</p>
+
+<p>
+<code>expr</code> \(\rightarrow\) { <i>integer literal</i>, <i>ID</i> }
 </p>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Zachary Haskins</p>
-<p class="date">Created: 2023-08-24 Thu 18:04</p>
+<p class="date">Created: 2023-08-24 Thu 21:57</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
