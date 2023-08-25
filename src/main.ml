@@ -30,12 +30,5 @@ let () =
   let src = read_input_file input_filepath in
   let lexer = Lexer.parse_code src in
   let parse = Parser.parser_create lexer.tokens in
-  let tree : Parser.node_exit_t option = Parser.parse_exit parse in
-  match tree with
-  | Some expr -> 
-     let gen = Gen.gen_create expr in
-     let asm = Gen.generate gen in
-     let _ = write_to_file output_filepath asm in
-     let _ = perform_cmd output_filepath Assemble in
-     perform_cmd output_filepath Link
-  | None -> failwith "No `ret` found"
+  let tree : Parser.node_prog_t = Parser.parse_program parse in
+  ()

@@ -60,7 +60,7 @@ let parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
   | _ ->
-     let _ = err "cannot create expression" in
+     let _ = err "cannot parse expression" in
      failwith "parser error"
 
 let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
@@ -84,27 +84,38 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
      (match expr with
       | Some e -> p, Some (NodeStmtLet { id = id; expr = e })
       | None ->
-         let _ = err "Expected an expression after 'let id ='" in
+         let _ = err "invalid expression after 'let `ID` ='" in
          failwith "parser error")
   | _ -> p, None (* no stmt found *)
 
-let rec parse_exit (p : parser_t) : node_exit_t option =
-  let rec parse_exit' (p : parser_t) (node_exit : node_exit_t option) : node_exit_t option =
-    match peek p with
-    | None -> node_exit
-    | Some t when t.tokentype = Token.EOF -> node_exit
-    | Some t when t.tokentype = Token.Exit ->
-       let p, _ = eat p in    (* eat `exit` *)
-       let p, _ = expect p Token.LParen in
-       let p, node_expr = parse_expr p in
-       let p, _ = expect p Token.RParen in
-       let p, _ = expect p Token.SemiColon in
-       (match node_expr with
-        | Some expr -> parse_exit' p (Some (node_exit_create expr))
-        | None -> failwith "(ERR) invalid expression")
-    | Some t ->
-       let _ = err ("unimplemented token: " ^ (Token.get_tokentype_as_str t.tokentype) ^ "\n") in
-       failwith "parser error"
+let parse_program (p : parser_t) : node_prog_t =
+  let rec parse_program' (p : parser_t) (program : node_prog_t) : node_prog_t =
+    let p, stmt = parse_stmt p in
+    match stmt with
+    | Some stmt -> parse_program' p { stmts = program.stmts @ [stmt] }
+    | None -> program
+       (* let _ = err "failed to parse statement" in *)
+       (* failwith "parser error" *)
   in
-  parse_exit' p None
+  parse_program' p { stmts = [] }
+
+(* let rec parse_exit (p : parser_t) : node_exit_t option = *)
+(*   let rec parse_exit' (p : parser_t) (node_exit : node_exit_t option) : node_exit_t option = *)
+(*     match peek p with *)
+(*     | None -> node_exit *)
+(*     | Some t when t.tokentype = Token.EOF -> node_exit *)
+(*     | Some t when t.tokentype = Token.Exit -> *)
+(*        let p, _ = eat p in    (\* eat `exit` *\) *)
+(*        let p, _ = expect p Token.LParen in *)
+(*        let p, node_expr = parse_expr p in *)
+(*        let p, _ = expect p Token.RParen in *)
+(*        let p, _ = expect p Token.SemiColon in *)
+(*        (match node_expr with *)
+(*         | Some expr -> parse_exit' p (Some (node_exit_create expr)) *)
+(*         | None -> failwith "(ERR) invalid expression") *)
+(*     | Some t -> *)
+(*        let _ = err ("unimplemented token: " ^ (Token.get_tokentype_as_str t.tokentype) ^ "\n") in *)
+(*        failwith "parser error" *)
+(*   in *)
+(*   parse_exit' p None *)
 
