@@ -1,10 +1,9 @@
 type lexer_t =
   { tokens : Token.token_t list }
 
-let lexer_create (tokens : Token.token_t list) : lexer_t =
-  { tokens = tokens }
-
 let symbols : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
+
+let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
 let populate_symbols () =
   let _ = Hashtbl.add symbols '(' Token.LParen in
@@ -21,8 +20,6 @@ let populate_symbols () =
   let _ = Hashtbl.add symbols '>' Token.GreaterThan in
   ()
 
-let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
-
 let populate_keywords () =
   let _ = Hashtbl.add keywords "let" Token.Let in
   let _ = Hashtbl.add keywords "str" Token.Str in
@@ -35,6 +32,9 @@ let populate_keywords () =
   let _ = Hashtbl.add keywords "struct" Token.Struct in
   let _ = Hashtbl.add keywords "end" Token.End in
   ()
+
+let lexer_create (tokens : Token.token_t list) : lexer_t =
+  { tokens = tokens }
 
 let isalpha (c : char) : bool =
   let c = int_of_char c in
@@ -95,10 +95,8 @@ let parse_code (src : string) : lexer_t =
 
             else if hd = '\'' then
               let charlit, rest = consume_while tl (fun c -> c <> '\'') in
+              (* (List.tl rest) to consume extra quote *)
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr charlit Token.CharLiteral])
-              (* failwith "TODO: ignore polymorphic and treat as char" *)
-              (* let poly, rest = consume_while tl (fun c -> not (isnum c) && not (isignorable c)) in *)
-              (* parse_code' rest (acc @ [Token.token_create_wstr poly Token.Polymorphic]) *)
 
             else if hd = '"' then
               let str, rest = consume_while tl (fun c -> c <> '"') in
@@ -108,23 +106,9 @@ let parse_code (src : string) : lexer_t =
             else
               failwith (Printf.sprintf "unsupported char %c (CODE: %d)\n" hd (int_of_char hd)) ))
   in
+  let _ = populate_keywords () in
+  let _ = populate_symbols () in
   parse_code' (src |> String.to_seq |> List.of_seq) []
 
 let lexer_dump (lexer : lexer_t) : unit =
   List.iter (fun token -> Token.token_print token) lexer.tokens
-
-let () =
-  let filepath = "./input.txt" in
-
-  let read_whole_file filename =
-    let ch = open_in_bin filename in
-    let s = really_input_string ch (in_channel_length ch) in
-    close_in ch;
-
-    s in
-
-  let _ = populate_keywords () in
-  let _ = populate_symbols () in
-  let src = read_whole_file filepath in
-  let lexer = parse_code src in
-  lexer_dump lexer

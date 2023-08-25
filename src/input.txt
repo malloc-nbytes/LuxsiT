@@ -1,7 +1,7 @@
-proc main :: () =
+proc main :: int =
   let x: int = 5;
   let tmp_variable: int = 7;
   let y: int = 9;
   let c: char = 'a';
   testfunc x y;
-  ret ()
+  ret 1

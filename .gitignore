@@ -9,9 +9,10 @@
 *.cmxa
 
 # bin names
-lexer
-parser
-ast
+src/bin/lexer
+src/bin/parser
+src/bin/gen
+src/bin/main
 
 # ocamlbuild working directory
 _build/

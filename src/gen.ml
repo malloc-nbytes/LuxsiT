@@ -1,5 +1,6 @@
 type gen_t =
-  { output : string }
+  { root : Parser.node_ret_t;
+    output : string }
 
 
 
