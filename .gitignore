@@ -9,6 +9,8 @@
 *.cmxa
 
 # bin names
+src/out.asm
+src/out
 src/bin/lexer
 src/bin/parser
 src/bin/gen

@@ -16,20 +16,24 @@ type parser_t =
 let parser_create (tokens : Token.token_t list) : parser_t =
   { tokens = tokens }
 
+(* Will return the token at `hd`. Does not eat it.*)
 let peek (p : parser_t) : Token.token_t option =
   match p.tokens with
   | [] -> None
   | hd :: _ -> Some hd
 
+(* Will return the token at `hd`. Will eat it. *)
 let eat (p : parser_t) : parser_t * (Token.token_t option) =
   match p.tokens with
   | [] -> p, None
   | hd :: tl -> parser_create tl, Some hd
 
+(* Will eat the token at `hd`. If `hd.tokentype` does not match
+   what is expected, will throw an error. *)
 let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   let hd = List.hd p.tokens and tl = List.tl p.tokens in
   if hd.tokentype <> expected_type then
-    let _ = Printf.printf "unexpected token \"%s\" expected: %s\n" hd.data (Token.get_tokentype_as_str hd.tokentype) in
+    let _ = Printf.printf "unexpected token \"%s\" expected: %s\n" hd.data (Token.get_tokentype_as_str expected_type) in
     failwith "parse ERR"
   else
     parser_create tl, hd
@@ -44,7 +48,7 @@ let rec parse (p : parser_t) : node_ret_t option =
   let rec parse' (p : parser_t) (node_ret : node_ret_t option) : node_ret_t option =
     match peek p with
     | None -> node_ret
-    | Some t when t.tokentype = Token.EOF -> failwith "EOF"
+    | Some t when t.tokentype = Token.EOF -> node_ret
     | Some t when t.tokentype = Token.Ret ->
        let p, _ = eat p in    (* eat `ret` *)
        let p, node_expr = parse_expr p in
