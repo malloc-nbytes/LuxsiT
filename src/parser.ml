@@ -26,7 +26,7 @@ type parser_t =
   { tokens: Token.token_t list }
 
 let err (msg : string) : unit =
-  Printf.printf "(ERR): %s\n" msg
+  Printf.printf "(ERR) %s\n" msg
 
 let parser_create (tokens : Token.token_t list) : parser_t =
   { tokens = tokens }
@@ -94,28 +94,5 @@ let parse_program (p : parser_t) : node_prog_t =
     match stmt with
     | Some stmt -> parse_program' p { stmts = program.stmts @ [stmt] }
     | None -> program
-       (* let _ = err "failed to parse statement" in *)
-       (* failwith "parser error" *)
   in
   parse_program' p { stmts = [] }
-
-(* let rec parse_exit (p : parser_t) : node_exit_t option = *)
-(*   let rec parse_exit' (p : parser_t) (node_exit : node_exit_t option) : node_exit_t option = *)
-(*     match peek p with *)
-(*     | None -> node_exit *)
-(*     | Some t when t.tokentype = Token.EOF -> node_exit *)
-(*     | Some t when t.tokentype = Token.Exit -> *)
-(*        let p, _ = eat p in    (\* eat `exit` *\) *)
-(*        let p, _ = expect p Token.LParen in *)
-(*        let p, node_expr = parse_expr p in *)
-(*        let p, _ = expect p Token.RParen in *)
-(*        let p, _ = expect p Token.SemiColon in *)
-(*        (match node_expr with *)
-(*         | Some expr -> parse_exit' p (Some (node_exit_create expr)) *)
-(*         | None -> failwith "(ERR) invalid expression") *)
-(*     | Some t -> *)
-(*        let _ = err ("unimplemented token: " ^ (Token.get_tokentype_as_str t.tokentype) ^ "\n") in *)
-(*        failwith "parser error" *)
-(*   in *)
-(*   parse_exit' p None *)
-

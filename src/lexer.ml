@@ -5,7 +5,7 @@ let symbols : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 10
 
-let populate_symbols () =
+let populate_symbols () : unit =
   let _ = Hashtbl.add symbols '(' Token.LParen in
   let _ = Hashtbl.add symbols ')' Token.RParen in
   let _ = Hashtbl.add symbols '=' Token.Equals in
@@ -20,7 +20,7 @@ let populate_symbols () =
   let _ = Hashtbl.add symbols '>' Token.GreaterThan in
   ()
 
-let populate_keywords () =
+let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "let" Token.Let in
   let _ = Hashtbl.add keywords "str" Token.Str in
   let _ = Hashtbl.add keywords "proc" Token.Proc in
