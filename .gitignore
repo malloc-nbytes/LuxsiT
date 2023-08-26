@@ -8,6 +8,8 @@
 *.cmxs
 *.cmxa
 
+.vscode
+
 # bin names
 src/out.asm
 src/out

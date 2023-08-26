@@ -1,5 +1,3 @@
-(* https://www.youtube.com/watch?v=GOwk_pMlt1M&t=10s : 39:12 *)
-
 type gen_t =
   { output : string;
     stackptr : int }
@@ -7,9 +5,27 @@ type gen_t =
 let err (msg : string) : unit =
   Printf.printf "(ERR) %s\n" msg
 
+let gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
+  match expr with
+  | Parser.NodeExprIntlit expr_intlit -> 
+    let output = gen.output in
+    let output = output ^ "    mov rax, " ^ expr_intlit.intlit.data ^ "\n" in
+    let output = output ^ "    push rax\n" in
+    { gen with output = output }
+  | Parser.NodeExprId id -> 
+    let output = gen.output in
+    (* todo *)
+    { gen with output = output }
+
 let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
-  | NodeStmtExit expr -> failwith "unimplemented"
+  | NodeStmtExit stmt_exit ->
+    let gen = gen_expr gen stmt_exit in
+    let output = gen.output in
+    let output = output ^ "    mov rax, 60\n" in
+    let output = output ^ "    pop rdi\n" in
+    let output = output ^ "    syscall\n" in
+    { gen with output = output }
   | NodeStmtLet stmt_let -> failwith "unimplemented"
 
 let generate_program (program : Parser.node_prog_t) : string =
@@ -25,7 +41,7 @@ let generate_program (program : Parser.node_prog_t) : string =
 
   let output = gen.output in
   let output = output ^ "    mov rax, 60\n" in
-  let output = output ^ "    mov rdi, 0" in
+  let output = output ^ "    mov rdi, 0\n" in
   let output = output ^ "    syscall" in
   
   output
