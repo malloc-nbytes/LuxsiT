@@ -1,1 +1,5 @@
-exit(100);
+let x = 7;
+let y = 9;
+let z = 10;
+let tmp = x;
+exit(tmp);
