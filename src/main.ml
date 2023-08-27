@@ -28,6 +28,7 @@ let perform_cmd (filepath : string) (_cmd : cmd) : unit =
 let () =
   let src = read_input_file input_filepath in
   let lexer = Lexer.parse_code src in
+  (* Lexer.lexer_dump lexer; *)
   let parse = Parser.parser_create lexer.tokens in
   let prog : Parser.node_prog_t = Parser.parse_program parse in
   let output = Gen.generate_program prog in

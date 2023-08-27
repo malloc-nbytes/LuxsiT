@@ -55,13 +55,21 @@ let gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
 
 let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
-  | NodeStmtExit stmt_exit ->
+  | Parser.NodeStmtExit stmt_exit ->
     let gen = gen_expr gen stmt_exit in
     let output = gen.output in
     let output = output ^ "    mov rax, 60\n" in
     let gen = pop ({ gen with output = output }) "rdi" in
     { gen with output = gen.output ^ "    syscall\n" }
-  | NodeStmtLet stmt_let ->
+  | Parser.NodeStmtPrint stmt_print ->
+    let _ = err "print() is not functional" in
+    failwith "gen error"
+    (* let gen = gen_expr gen stmt_print in *)
+    (* let output = gen.output in *)
+    (* let output = output ^ "    mov rax, 60\n" in *)
+    (* let gen = pop ({ gen with output = output }) "rdi" in *)
+    (* { gen with output = gen.output ^ "    syscall\n" } *)
+  | Parser.NodeStmtLet stmt_let ->
      if var_exists gen stmt_let.id.data then
        let _ = err ("ID " ^ stmt_let.id.data ^ " is already defined") in
        failwith "gen error"
@@ -81,6 +89,8 @@ let generate_program (program : Parser.node_prog_t) : string =
               vars = Hashtbl.create 20 } in
 
   let gen = iter_prog_stmts gen program.stmts in
+
+  (* Obligatory exit for when the programmer forgets (>д<) *)
 
   let output = gen.output in
   let output = output ^ "    mov rax, 60\n" in

@@ -5,8 +5,8 @@ set -xe
 mkdir -p bin
 mkdir -p obj
 
-opam switch 5.0.0
-eval $(opam env)
+# opam switch 5.0.0
+# eval $(opam env)
 
 # $(opam env --switch=5.0.0)
 

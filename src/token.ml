@@ -18,6 +18,7 @@ type tokentype_t =
   | Colon
   | Proc
   | Exit
+  | Print
   | SemiColon
   | LParen
   | RParen
@@ -57,6 +58,7 @@ let get_tokentype_as_str (tokentype : tokentype_t) : string =
   | Proc -> "Proc"
   | Ret -> "Ret"
   | Exit -> "Exit"
+  | Print -> "Print"
   | LParen -> "LParen"
   | RParen -> "RParen"
   | Comma -> "Comma"
@@ -85,6 +87,7 @@ let token_print (token : token_t) : unit =
   | LessThan -> Printf.printf "LessThan\n"
   | End -> Printf.printf "End\n"
   | Exit -> Printf.printf "Exit\n"
+  | Print -> Printf.printf "Print\n"
   | Proc -> Printf.printf "Proc\n"
   | Ret -> Printf.printf "Ret\n"
   | LParen -> Printf.printf "LParen\n"
