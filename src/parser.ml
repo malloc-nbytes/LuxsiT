@@ -4,22 +4,22 @@ type node_expr_intlit =
 type node_expr_id =
   { id : Token.token_t }
 
-and bin_expr_mult_t =
+and node_bin_expr_mult_t =
   { lhs : node_expr_t;
     rhs : node_expr_t }
 
-and bin_expr_add_t =
+and node_bin_expr_add_t =
   { lhs : node_expr_t;
     rhs : node_expr_t }
 
-and bin_expr_t =
-  | BinExprAdd of bin_expr_add_t
-  | BinExprMult of bin_expr_mult_t
+and node_bin_expr_t =
+  | NodeBinExprAdd of node_bin_expr_add_t
+  | NodeBinExprMult of node_bin_expr_mult_t
 
 and node_expr_t =
   | NodeExprIntlit of node_expr_intlit
   | NodeExprId of node_expr_id
-  | BinaryExpr of bin_expr_t
+  | NodeBinaryExpr of node_bin_expr_t
 
 type node_stmt_let =
   { id : Token.token_t;
@@ -65,18 +65,39 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
     failwith "parser error"
   else parser_create tl, hd
 
-let parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
+let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) =
+  let p, lhs = parse_expr p in
+  match lhs with
+  | None -> p, None
+  | Some lhs_expr ->
+     match peek p with
+     | Some t when t.tokentype == Token.Plus ->
+        let p, _ = expect p Token.Plus in
+        let p, rhs = parse_expr p in
+        (match rhs with
+         | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = lhs_expr; rhs = rhs_expr })
+         | None ->
+            let _ = err "Expected expression" in
+            failwith "parser error")
+     | Some t when t.tokentype == Token.Mult -> failwith "todo: multiplication"
+     | _ -> failwith "peek failed"
+
+and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, token = eat p in
   match token with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
   | _ ->
-     let _ = err "cannot parse expression" in
-     failwith "parser error"
+     (* parse binary expression *)
+     let p, expr = parse_bin_expr p in
+     (match expr with
+     | Some expr -> p, Some (NodeBinaryExpr expr)
+     | None ->
+        let _ = err "cannot parse expression" in
+        failwith "parser error")
 
 let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
-  (* TODO: factor out this dumbass shit *)
   match peek p with
   | Some t when t.tokentype = Token.Exit ->
      let p, _ = eat p in        (* eat exit *)

@@ -28,6 +28,8 @@ type tokentype_t =
   | IntegerLiteral
   | Equals
   | Binop
+  | Plus
+  | Mult
   | EOF
 
 type token_t =
@@ -62,6 +64,8 @@ let get_tokentype_as_str (tokentype : tokentype_t) : string =
   | LParen -> "LParen"
   | RParen -> "RParen"
   | Comma -> "Comma"
+  | Plus -> "Plus"
+  | Mult -> "Mult"
   | ID -> "ID"
   | IntegerLiteral -> "IntegerLiteral"
   | StringLiteral -> "StringLiteral"
@@ -93,6 +97,8 @@ let token_print (token : token_t) : unit =
   | LParen -> Printf.printf "LParen\n"
   | RParen -> Printf.printf "RParen\n"
   | Comma -> Printf.printf "Comma\n"
+  | Plus -> Printf.printf "Plus\n"
+  | Mult -> Printf.printf "Mult\n"
   | ID -> Printf.printf "ID: %s\n" token.data
   | IntegerLiteral -> Printf.printf "IntegerLiteral: %s\n" token.data
   | StringLiteral -> Printf.printf "StringLiteral: %s\n" token.data

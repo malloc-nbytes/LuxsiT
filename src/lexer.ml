@@ -12,10 +12,9 @@ let populate_symbols () : unit =
   let _ = Hashtbl.add symbols ':' Token.Colon in
   let _ = Hashtbl.add symbols ';' Token.SemiColon in
   let _ = Hashtbl.add symbols ',' Token.Comma in
-  let _ = Hashtbl.add symbols '+' Token.Binop in
-  (* let _ = Hashtbl.add symbols '-' Token.Binop in *) (* this is omitted because of -> *)
+  let _ = Hashtbl.add symbols '+' Token.Plus in
   let _ = Hashtbl.add symbols '/' Token.Binop in
-  let _ = Hashtbl.add symbols '*' Token.Binop in
+  let _ = Hashtbl.add symbols '*' Token.Mult in
   let _ = Hashtbl.add symbols '<' Token.LessThan in
   let _ = Hashtbl.add symbols '>' Token.GreaterThan in
   ()
