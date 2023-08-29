@@ -2,7 +2,7 @@ type cmd =
   | Assemble
   | Link
 
-let input_filepath = "./input.txt"
+let input_filepath = "./input.lux"
 let output_filepath = "./out.asm"
 let assemble_cmd = "nasm -felf64 " ^ output_filepath
 let link_cmd = "ld -o ./out ./out.o"

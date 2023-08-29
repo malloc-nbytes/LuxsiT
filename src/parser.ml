@@ -20,12 +20,8 @@ type node_stmt_let =
 type node_stmt_exit =
   { expr : node_expr_t }
 
-type node_stmt_print =
-  { expr : node_expr_t }
-
 type node_stmt_t =
   | NodeStmtExit of node_expr_t
-  | NodeStmtPrint of node_expr_t
   | NodeStmtLet of node_stmt_let
 
 type node_prog_t =
@@ -86,23 +82,9 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
       | None ->
          let _ = err "expected an expression after 'exit('" in
          failwith "parser error")
-  | Some t when t.tokentype = Token.Print ->
-     let p, _ = eat p in        (* eat print *)
-     let p, _ = expect p Token.LParen in
-     let p, node_expr = parse_expr p in
-     (match node_expr with
-      | Some expr ->
-         let p, _ = expect p Token.RParen in
-         let p, _ = expect p Token.SemiColon in
-         p, Some (NodeStmtPrint expr)
-      | None ->
-         let _ = err "expected an expression after 'print('" in
-         failwith "parser error")
   | Some t when t.tokentype = Token.Let ->
      let p, _ = eat p in        (* eat let *)
      let p, id = expect p Token.ID in
-     let p, _ = expect p Token.Colon in
-     let p, type_ = expect p Token.I32 in
      let p, _ = expect p Token.Equals in
      let p, expr = parse_expr p in
      let p, _ = expect p Token.SemiColon in

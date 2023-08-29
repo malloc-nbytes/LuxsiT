@@ -61,14 +61,6 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
     let output = output ^ "    mov rax, 60\n" in
     let gen = pop ({ gen with output = output }) "rdi" in
     { gen with output = gen.output ^ "    syscall\n" }
-  | Parser.NodeStmtPrint stmt_print ->
-    let _ = err "print() is not functional" in
-    failwith "gen error"
-    (* let gen = gen_expr gen stmt_print in *)
-    (* let output = gen.output in *)
-    (* let output = output ^ "    mov rax, 60\n" in *)
-    (* let gen = pop ({ gen with output = output }) "rdi" in *)
-    (* { gen with output = gen.output ^ "    syscall\n" } *)
   | Parser.NodeStmtLet stmt_let ->
      if var_exists gen stmt_let.id.data then
        let _ = err ("ID " ^ stmt_let.id.data ^ " is already defined") in
