@@ -4,19 +4,19 @@ type node_expr_intlit =
 type node_expr_id =
   { id : Token.token_t }
 
-type bin_expr_mult_t =
+and bin_expr_mult_t =
   { lhs : node_expr_t;
     rhs : node_expr_t }
 
-type bin_expr_add_t =
+and bin_expr_add_t =
   { lhs : node_expr_t;
     rhs : node_expr_t }
 
-type bin_expr_t =
+and bin_expr_t =
   | BinExprAdd of bin_expr_add_t
   | BinExprMult of bin_expr_mult_t
 
-type node_expr_t =
+and node_expr_t =
   | NodeExprIntlit of node_expr_intlit
   | NodeExprId of node_expr_id
   | BinaryExpr of bin_expr_t

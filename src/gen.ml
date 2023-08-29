@@ -52,6 +52,8 @@ let gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
     let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
     let gen = push { gen with output = output } "rax" in
     gen
+  | Parser.BinaryExpr expr_bin ->
+     failwith "TODO"
 
 let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
