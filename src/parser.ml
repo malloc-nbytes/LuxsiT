@@ -1,7 +1,7 @@
-type node_expr_intlit =
+type node_term_intlit_t =
   { intlit : Token.token_t }
 
-type node_expr_id =
+type node_term_id_t =
   { id : Token.token_t }
 
 and node_bin_expr_mult_t =
@@ -16,9 +16,12 @@ and node_bin_expr_t =
   | NodeBinExprAdd of node_bin_expr_add_t
   | NodeBinExprMult of node_bin_expr_mult_t
 
+and node_term_t =
+  | NodeTermIntlit of node_term_intlit_t
+  | NodeTermId of node_term_id_t
+
 and node_expr_t =
-  | NodeExprIntlit of node_expr_intlit
-  | NodeExprId of node_expr_id
+  | NodeTerm of node_term
   | NodeBinaryExpr of node_bin_expr_t
 
 type node_stmt_let =
@@ -65,6 +68,13 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
     failwith "parser error"
   else parser_create tl, hd
 
+let parse_term (p : parser_t) : parser_t * (node_term_t option) =
+  match peek p with
+  | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
+  | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
+  | None -> p, None
+
+(* https://www.youtube.com/watch?v=8PpARII2ytM&t=985 : 1:12 *)
 let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) =
   let p, lhs = parse_expr p in
   match lhs with
@@ -83,6 +93,7 @@ let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) =
      | _ -> failwith "peek failed"
 
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
+  let term = parse_term p in
   let p, token = eat p in
   match token with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
