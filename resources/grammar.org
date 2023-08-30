@@ -2,6 +2,12 @@
 
 =program= $\rightarrow$ [ =stmt= ] *
 
-=stmt= $\rightarrow$ { =exit=, =let= /ID/ = =expr= =;=}
+=stmt= $\rightarrow$ { /exit/ (=expr=), /let ID/ = =expr=;}
 
-=expr= $\rightarrow$ { /integer literal/, /ID/ }
+=expr= $\rightarrow$ { =term=, =BinaryExpr= }
+
+=BinaryExpr= $\rightarrow$ { =expr= /*/ =expr=, =expr= /+/ =expr= }
+
+=term= $\rightarrow$ { =Integer Literal=, =ID= }
+
+

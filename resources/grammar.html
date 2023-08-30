@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2023-08-24 Thu 21:57 -->
+<!-- 2023-08-29 Tue 22:48 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Grammar</title>
@@ -270,16 +270,24 @@ for the JavaScript code in this tag.
 </p>
 
 <p>
-<code>stmt</code> \(\rightarrow\) { <code>exit</code>, <code>let</code> <i>ID</i> = <code>expr</code> <code>;</code>}
+<code>stmt</code> \(\rightarrow\) { <i>exit</i> (<code>expr</code>), <i>let ID</i> = <code>expr</code>;}
 </p>
 
 <p>
-<code>expr</code> \(\rightarrow\) { <i>integer literal</i>, <i>ID</i> }
+<code>expr</code> \(\rightarrow\) { <code>term</code>, <code>BinaryExpr</code> }
+</p>
+
+<p>
+<code>BinaryExpr</code> \(\rightarrow\) { <code>expr</code> <i>*</i> <code>expr</code>, <code>expr</code> <i>+</i> <code>expr</code> }
+</p>
+
+<p>
+<code>term</code> \(\rightarrow\) { <code>Integer Literal</code>, <code>ID</code> }
 </p>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Zachary Haskins</p>
-<p class="date">Created: 2023-08-24 Thu 21:57</p>
+<p class="date">Created: 2023-08-29 Tue 22:48</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

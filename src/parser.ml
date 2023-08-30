@@ -21,10 +21,10 @@ and node_term_t =
   | NodeTermId of node_term_id_t
 
 and node_expr_t =
-  | NodeTerm of node_term
+  | NodeTerm of node_term_t
   | NodeBinaryExpr of node_bin_expr_t
 
-type node_stmt_let =
+type node_stmt_let_t =
   { id : Token.token_t;
     expr : node_expr_t }
 
@@ -33,7 +33,7 @@ type node_stmt_exit =
 
 type node_stmt_t =
   | NodeStmtExit of node_expr_t
-  | NodeStmtLet of node_stmt_let
+  | NodeStmtLet of node_stmt_let_t
 
 type node_prog_t =
   { stmts : node_stmt_t list }
@@ -74,23 +74,22 @@ let parse_term (p : parser_t) : parser_t * (node_term_t option) =
   | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
 
-(* https://www.youtube.com/watch?v=8PpARII2ytM&t=985 : 1:12 *)
-let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) =
-  let p, lhs = parse_expr p in
-  match lhs with
-  | None -> p, None
-  | Some lhs_expr ->
-     match peek p with
-     | Some t when t.tokentype == Token.Plus ->
-        let p, _ = expect p Token.Plus in
-        let p, rhs = parse_expr p in
-        (match rhs with
-         | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = lhs_expr; rhs = rhs_expr })
-         | None ->
-            let _ = err "Expected expression" in
-            failwith "parser error")
-     | Some t when t.tokentype == Token.Mult -> failwith "todo: multiplication"
-     | _ -> failwith "peek failed"
+(* let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) = *)
+(*   let p, lhs = parse_expr p in *)
+(*   match lhs with *)
+(*   | None -> p, None *)
+(*   | Some lhs_expr -> *)
+(*      match peek p with *)
+(*      | Some t when t.tokentype == Token.Plus -> *)
+(*         let p, _ = expect p Token.Plus in *)
+(*         let p, rhs = parse_expr p in *)
+(*         (match rhs with *)
+(*          | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = lhs_expr; rhs = rhs_expr }) *)
+(*          | None -> *)
+(*             let _ = err "Expected expression" in *)
+(*             failwith "parser error") *)
+(*      | Some t when t.tokentype == Token.Mult -> failwith "todo: multiplication" *)
+(*      | _ -> failwith "peek failed" *)
 
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let term = parse_term p in
@@ -99,14 +98,13 @@ and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
-  | _ ->
-     (* parse binary expression *)
-     let p, expr = parse_bin_expr p in
-     (match expr with
-     | Some expr -> p, Some (NodeBinaryExpr expr)
-     | None ->
-        let _ = err "cannot parse expression" in
-        failwith "parser error")
+  | _ -> failwith "todo"
+     (* let p, expr = parse_bin_expr p in *)
+     (* (match expr with *)
+     (* | Some expr -> p, Some (NodeBinaryExpr expr) *)
+     (* | None -> *)
+     (*    let _ = err "cannot parse expression" in *)
+     (*    failwith "parser error") *)
 
 let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
   match peek p with
