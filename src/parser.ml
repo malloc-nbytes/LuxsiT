@@ -47,6 +47,13 @@ let err (msg : string) : unit =
 let parser_create (tokens : Token.token_t list) : parser_t =
   { tokens = tokens }
 
+let unwrap (k : 'a option) : 'a =
+  match k with
+  | Some x -> x
+  | None -> 
+      let _ = err "called unwrap on None value" in
+      failwith "(fatal) parser error"
+
 (* Will return the token at `hd`. Does not eat it.*)
 let peek (p : parser_t) : Token.token_t option =
   match p.tokens with
@@ -68,11 +75,12 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
     failwith "parser error"
   else parser_create tl, hd
 
-let parse_term (p : parser_t) : parser_t * (node_term_t option) =
+let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   match peek p with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
   | None -> p, None
+  | _ -> failwith "todo"
 
 (* let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) = *)
 (*   let p, lhs = parse_expr p in *)
