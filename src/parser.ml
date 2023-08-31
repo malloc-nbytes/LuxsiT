@@ -22,11 +22,7 @@ and node_term_t =
 
 and node_expr_t =
   | NodeTerm of node_term_t
-  (* QAD fix *)
-  (* TODO: make NodeBinaryExpr a part of this *)
-  | NodeBinExprAdd of node_bin_expr_add_t
-  | NodeBinExprMult of node_bin_expr_mult_t
-  (* | NodeBinaryExpr of node_bin_expr_t *)
+  | NodeBinaryExpr of node_bin_expr_t
 
 type node_stmt_let_t =
   { id : Token.token_t;
@@ -89,13 +85,13 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
   if term <> None then
-    let p, _ = eat p in (* eat term *)
-    match peek p with
+    let p, _ = eat p in (* eat term i.e. 1 + 2, `1` is a term, it gets eaten. *)
+    match peek p with (* figure out which binary expression to use *)
     | Some t when t.tokentype = Token.Plus ->
        let p, _ = expect p Token.Plus in
        let p, rhs = parse_expr p in
        (match rhs with
-        | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = NodeTerm (unwrap term); rhs = rhs_expr })
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprAdd { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
         | None ->
            let _ = err "expected expression after '+'" in
            failwith "parser error")
@@ -103,7 +99,7 @@ and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
        let p, _ = expect p Token.Mult in
        let p, rhs = parse_expr p in
        (match rhs with
-        | Some rhs_expr -> p, Some (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr })
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
         | None ->
            let _ = err "expected expression after '*'" in
            failwith "parser error")
