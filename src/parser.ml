@@ -1,19 +1,30 @@
-(* TODO:
-   - Change printing errors to print the
-     actual string token instead of `ID`
-     or `RParen` etc. *)
-
-type node_expr_intlit =
+type node_term_intlit_t =
   { intlit : Token.token_t }
 
-type node_expr_id =
+type node_term_id_t =
   { id : Token.token_t }
 
-type node_expr_t =
-  | NodeExprIntlit of node_expr_intlit
-  | NodeExprId of node_expr_id
+and node_bin_expr_mult_t =
+  { lhs : node_expr_t;
+    rhs : node_expr_t }
 
-type node_stmt_let =
+and node_bin_expr_add_t =
+  { lhs : node_expr_t;
+    rhs : node_expr_t }
+
+and node_bin_expr_t =
+  | NodeBinExprAdd of node_bin_expr_add_t
+  | NodeBinExprMult of node_bin_expr_mult_t
+
+and node_term_t =
+  | NodeTermIntlit of node_term_intlit_t
+  | NodeTermId of node_term_id_t
+
+and node_expr_t =
+  | NodeTerm of node_term_t
+  | NodeBinaryExpr of node_bin_expr_t
+
+type node_stmt_let_t =
   { id : Token.token_t;
     expr : node_expr_t }
 
@@ -22,7 +33,7 @@ type node_stmt_exit =
 
 type node_stmt_t =
   | NodeStmtExit of node_expr_t
-  | NodeStmtLet of node_stmt_let
+  | NodeStmtLet of node_stmt_let_t
 
 type node_prog_t =
   { stmts : node_stmt_t list }
@@ -35,6 +46,13 @@ let err (msg : string) : unit =
 
 let parser_create (tokens : Token.token_t list) : parser_t =
   { tokens = tokens }
+
+let unwrap (k : 'a option) : 'a =
+  match k with
+  | Some x -> x
+  | None -> 
+      let _ = err "called unwrap on None value" in
+      failwith "(fatal) parser error"
 
 (* Will return the token at `hd`. Does not eat it.*)
 let peek (p : parser_t) : Token.token_t option =
@@ -57,18 +75,39 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
     failwith "parser error"
   else parser_create tl, hd
 
-let parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
-  let p, token = eat p in
-  match token with
-  | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
-  | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
+let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
+  match peek p with
+  | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
+  | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
   | None -> p, None
-  | _ ->
-     let _ = err "cannot parse expression" in
-     failwith "parser error"
+  | _ -> failwith "todo"
+
+and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
+  let p, term = parse_term p in
+  if term <> None then
+    let p, _ = eat p in (* eat term i.e. 1 + 2, `1` is a term, it gets eaten. *)
+    match peek p with (* figure out which binary expression to use *)
+    | Some t when t.tokentype = Token.Plus ->
+       let p, _ = expect p Token.Plus in
+       let p, rhs = parse_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprAdd { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
+        | None ->
+           let _ = err "expected expression after '+'" in
+           failwith "parser error")
+    | Some t when t.tokentype = Token.Mult ->
+       let p, _ = expect p Token.Mult in
+       let p, rhs = parse_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
+        | None ->
+           let _ = err "expected expression after '*'" in
+           failwith "parser error")
+    | _ -> p, Some (NodeTerm (unwrap term))
+  else
+    p, None
 
 let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
-  (* TODO: factor out this dumbass shit *)
   match peek p with
   | Some t when t.tokentype = Token.Exit ->
      let p, _ = eat p in        (* eat exit *)
@@ -104,3 +143,4 @@ let parse_program (p : parser_t) : node_prog_t =
   in
   let _, result = parse_program' p { stmts = [] } in
   result
+

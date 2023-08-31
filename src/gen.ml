@@ -33,27 +33,43 @@ let pop (gen : gen_t) (reg : string) : gen_t =
   let output = output ^ "    pop " ^ reg ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr - 1 }
 
-let gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
-  match expr with
-  | Parser.NodeExprIntlit expr_intlit -> 
+let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
+  match term with
+  | Parser.NodeTermIntlit term_intlit ->
     let output = gen.output in
-    let output = output ^ "    mov rax, " ^ expr_intlit.intlit.data ^ "\n" in
+    let output = output ^ "    mov rax, " ^ term_intlit.intlit.data ^ "\n" in
     push ({ gen with output = output }) "rax"
-  | Parser.NodeExprId expr_id ->
-
+  | Parser.NodeTermId term_id ->
     let var : var_t =
-      match get_var gen expr_id.id.data with
+      match get_var gen term_id.id.data with
       | Some var -> var
       | None ->
-         let _ = err ("undeclared ID " ^ expr_id.id.data ^ "\n") in
+         let _ = err ("undeclared ID " ^ term_id.id.data ^ "\n") in
          failwith "gen error" in
 
     let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
     let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
-    let gen = push { gen with output = output } "rax" in
-    gen
-  (* | Parser.NodeBinaryExpr bin_expr -> *)
-  (*    failwith "unimplemented" *)
+    push { gen with output = output } "rax"
+
+let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
+  match expr with
+  | Parser.NodeTerm term -> gen_term gen term
+  | Parser.NodeBinaryExpr bin_expr ->
+    (match bin_expr with
+    | Parser.NodeBinExprAdd add_expr ->
+      let gen = gen_expr gen add_expr.lhs in (* gets put on top of stack *)
+      let gen = gen_expr gen add_expr.rhs in (* gets put on top of stack *)
+      let gen = pop gen "rdi" in (* pop the evaluated expr *)
+      let gen = pop gen "rax" in (* pop the evaluated expr *)
+      let output = gen.output ^ "    add rax, rdi\n" in
+      push ({ gen with output = output }) "rax"
+    | NodeBinExprMult mult_expr ->
+      let gen = gen_expr gen mult_expr.lhs in
+      let gen = gen_expr gen mult_expr.rhs in
+      let gen = pop gen "rdi" in
+      let gen = pop gen "rax" in
+      let output = gen.output ^ "    imul rax, rdi\n" in
+      push ({ gen with output = output }) "rax")
 
 let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
