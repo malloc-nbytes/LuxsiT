@@ -22,7 +22,11 @@ and node_term_t =
 
 and node_expr_t =
   | NodeTerm of node_term_t
-  | NodeBinaryExpr of node_bin_expr_t
+  (* QAD fix *)
+  (* TODO: make NodeBinaryExpr a part of this *)
+  | NodeBinExprAdd of node_bin_expr_add_t
+  | NodeBinExprMult of node_bin_expr_mult_t
+  (* | NodeBinaryExpr of node_bin_expr_t *)
 
 type node_stmt_let_t =
   { id : Token.token_t;
@@ -78,41 +82,34 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
 let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   match peek p with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
-  | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
+  | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
   | None -> p, None
   | _ -> failwith "todo"
-
-(* let rec parse_bin_expr (p : parser_t) : parser_t * (node_bin_expr_t option) = *)
-(*   let p, lhs = parse_expr p in *)
-(*   match lhs with *)
-(*   | None -> p, None *)
-(*   | Some lhs_expr -> *)
-(*      match peek p with *)
-(*      | Some t when t.tokentype == Token.Plus -> *)
-(*         let p, _ = expect p Token.Plus in *)
-(*         let p, rhs = parse_expr p in *)
-(*         (match rhs with *)
-(*          | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = lhs_expr; rhs = rhs_expr }) *)
-(*          | None -> *)
-(*             let _ = err "Expected expression" in *)
-(*             failwith "parser error") *)
-(*      | Some t when t.tokentype == Token.Mult -> failwith "todo: multiplication" *)
-(*      | _ -> failwith "peek failed" *)
 
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
-  let term = parse_term p in
-  let p, token = eat p in
-  match token with
-  | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeExprIntlit { intlit = t })
-  | Some t when t.tokentype = Token.ID -> p, Some (NodeExprId { id = t })
-  | None -> p, None
-  | _ -> failwith "todo"
-     (* let p, expr = parse_bin_expr p in *)
-     (* (match expr with *)
-     (* | Some expr -> p, Some (NodeBinaryExpr expr) *)
-     (* | None -> *)
-     (*    let _ = err "cannot parse expression" in *)
-     (*    failwith "parser error") *)
+  let p, term = parse_term p in
+  if term <> None then
+    let p, _ = eat p in (* eat term *)
+    match peek p with
+    | Some t when t.tokentype = Token.Plus ->
+       let p, _ = expect p Token.Plus in
+       let p, rhs = parse_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinExprAdd { lhs = NodeTerm (unwrap term); rhs = rhs_expr })
+        | None ->
+           let _ = err "expected expression after '+'" in
+           failwith "parser error")
+    | Some t when t.tokentype = Token.Mult ->
+       let p, _ = expect p Token.Mult in
+       let p, rhs = parse_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr })
+        | None ->
+           let _ = err "expected expression after '*'" in
+           failwith "parser error")
+    | _ -> p, Some (NodeTerm (unwrap term))
+  else
+    p, None
 
 let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
   match peek p with
