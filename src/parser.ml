@@ -77,6 +77,7 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   match peek p with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
+  | Some t when t.tokentype = Token.LParen -> p, Some (NodeTermId { id = t })
   | None -> p, None
   | _ -> failwith "todo: parse_term"
 
@@ -97,7 +98,7 @@ let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t optio
   else
     p, None
 
-and parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
+let rec parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_multiplicative_expr p in
   if term <> None then
     (* let p, _ = eat p in *) (* do not eat here, does so in parse_multiplicative_expr *)
@@ -114,7 +115,8 @@ and parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
   else
     p, None
 
-and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
+(* was `and`, not `let` *)
+let rec parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
   if term <> None then
     let p, _ = eat p in (* eat term i.e. 1 + 2, `1` is a term, it gets eaten. *)
