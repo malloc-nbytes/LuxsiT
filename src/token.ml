@@ -19,7 +19,6 @@ type tokentype_t =
   | Proc
   | Exit
   | Println
-  | StackDump
   | SemiColon
   | LParen
   | RParen
@@ -62,7 +61,6 @@ let get_tokentype_as_str (tokentype : tokentype_t) : string =
   | Ret -> "ret"
   | Exit -> "exit"
   | Println -> "println"
-  | StackDump -> "stackdump"
   | LParen -> "("
   | RParen -> ")"
   | Comma -> ","
@@ -94,7 +92,6 @@ let token_print (token : token_t) : unit =
   | End -> Printf.printf "End\n"
   | Exit -> Printf.printf "Exit\n"
   | Println -> Printf.printf "Println\n"
-  | StackDump -> Printf.printf "StackDump\n"
   | Proc -> Printf.printf "Proc\n"
   | Ret -> Printf.printf "Ret\n"
   | LParen -> Printf.printf "LParen\n"

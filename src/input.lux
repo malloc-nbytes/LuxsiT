@@ -1,5 +1,6 @@
-let x = 1 + 2;
+proc main
+
+let x = 1;
 let y = 2;
-let z = 1 + x + y;
-println(x + y + z + 1000);
-exit(z);
+let z = 3;
+println x + y + z;

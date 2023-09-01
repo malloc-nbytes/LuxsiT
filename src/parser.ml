@@ -32,7 +32,6 @@ type node_stmt_t =
   | NodeStmtExit of node_expr_t
   | NodeStmtPrintln of node_expr_t
   | NodeStmtLet of node_stmt_let_t
-  | NodeStmtStackDump of unit
 
 type node_prog_t =
   { stmts : node_stmt_t list }
@@ -79,7 +78,7 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
   | None -> p, None
-  | _ -> failwith "todo"
+  | _ -> failwith "todo: parse_term"
 
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
@@ -110,11 +109,11 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
   match peek p with
   | Some t when t.tokentype = Token.Exit ->
      let p, _ = eat p in        (* eat exit *)
-     let p, _ = expect p Token.LParen in
+     (* let p, _ = expect p Token.LParen in *)
      let p, node_expr = parse_expr p in
      (match node_expr with
       | Some expr ->
-         let p, _ = expect p Token.RParen in
+         (* let p, _ = expect p Token.RParen in *)
          let p, _ = expect p Token.SemiColon in
          p, Some (NodeStmtExit expr)
       | None ->
@@ -122,11 +121,11 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
          failwith "parser error")
   | Some t when t.tokentype = Token.Println ->
      let p, _ = eat p in        (* eat println *)
-     let p, _ = expect p Token.LParen in
+     (* let p, _ = expect p Token.LParen in *)
      let p, node_expr = parse_expr p in
      (match node_expr with
       | Some expr ->
-         let p, _ = expect p Token.RParen in
+         (* let p, _ = expect p Token.RParen in *)
          let p, _ = expect p Token.SemiColon in
          p, Some (NodeStmtPrintln expr)
       | None ->
@@ -143,10 +142,9 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
       | None ->
          let _ = err "invalid expression after 'let `ID` ='" in
          failwith "parser error")
-  | Some t when t.tokentype = Token.StackDump ->
-     let p, _ = eat p in        (* eat stackdump *)
-     let p, _ = expect p Token.SemiColon in
-     p, None (* no stmt found *)
+  | Some t when t.tokentype <> Token.EOF -> 
+    let _ = err ("unrecognized token " ^ (Token.get_tokentype_as_str t.tokentype)) in
+    failwith "parser error"
   | _ -> p, None (* no stmt found *)
 
 let parse_program (p : parser_t) : node_prog_t =

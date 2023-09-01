@@ -26,7 +26,6 @@ let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "ret" Token.Ret in
   let _ = Hashtbl.add keywords "exit" Token.Exit in
   let _ = Hashtbl.add keywords "println" Token.Println in
-  let _ = Hashtbl.add keywords "stackdump" Token.StackDump in
   let _ = Hashtbl.add keywords "i32" Token.I32 in
   let _ = Hashtbl.add keywords "int" Token.Int in
   let _ = Hashtbl.add keywords "u32" Token.U32 in
