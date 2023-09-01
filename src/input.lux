@@ -1,5 +1,5 @@
 let x = 2;
 let y = 3;
-let z = 4;
-let mult = x + y * z;
+let z = x;
+let mult = z + x * y;
 println mult;

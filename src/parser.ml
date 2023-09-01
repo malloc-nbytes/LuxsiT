@@ -19,6 +19,7 @@ and node_bin_expr_t =
 and node_term_t =
   | NodeTermIntlit of node_term_intlit_t
   | NodeTermId of node_term_id_t
+  | NodeTermLParen of unit
 
 and node_expr_t =
   | NodeTerm of node_term_t
@@ -77,7 +78,16 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   match peek p with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
-  | Some t when t.tokentype = Token.LParen -> p, Some (NodeTermId { id = t })
+  | Some t when t.tokentype = Token.LParen ->
+     let p, _ = expect p Token.LParen in
+     let p, expr = parse_expr p in
+     (match expr with
+      | Some e ->
+         let p, _ = expect p Token.RParen in
+         p, Some (NodeTermLParen ())
+      | None ->
+         let _ = err "expected an expression after '(' in term" in
+         failwith "parser error")
   | None -> p, None
   | _ -> failwith "todo: parse_term"
 
