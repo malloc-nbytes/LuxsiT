@@ -84,7 +84,7 @@ let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t optio
   let p, term = parse_term p in
   if term <> None then
     let p, _ = eat p in (* eat term i.e. 1 * 2, `1` is a term, it gets eaten. *)
-    match peek p with (* figure out which binary expression to use *)
+    match peek p with
     | Some t when t.tokentype = Token.Mult ->
        let p, _ = expect p Token.Mult in
        let p, rhs = parse_multiplicative_expr p in
@@ -100,8 +100,8 @@ let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t optio
 and parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_multiplicative_expr p in
   if term <> None then
-    (* let p, _ = eat p in *) (* eat term i.e. 1 * 2, `1` is a term, it gets eaten. *)
-    match peek p with (* figure out which binary expression to use *)
+    (* let p, _ = eat p in *) (* do not eat here, does so in parse_multiplicative_expr *)
+    match peek p with
     | Some t when t.tokentype = Token.Plus ->
        let p, _ = expect p Token.Plus in
        let p, rhs = parse_additive_expr p in
