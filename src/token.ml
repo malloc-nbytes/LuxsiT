@@ -18,7 +18,8 @@ type tokentype_t =
   | Colon
   | Proc
   | Exit
-  | Print
+  | Println
+  | StackDump
   | SemiColon
   | LParen
   | RParen
@@ -44,33 +45,34 @@ let token_create_wstr (data : string) (tokentype : tokentype_t) : token_t =
 
 let get_tokentype_as_str (tokentype : tokentype_t) : string =
   match tokentype with
-  | Let -> "Let"
-  | Str -> "Str"
-  | I32 -> "I32"
-  | U32 -> "U32"
-  | Int -> "Int"
-  | Char -> "Char"
-  | Struct -> "Struct"
-  | Colon -> "Colon"
-  | SemiColon -> "SemiColon"
-  | GreaterThan -> "GreaterThan"
-  | RightArrow -> "RightArrow"
-  | LessThan -> "LessThan"
-  | End -> "End"
-  | Proc -> "Proc"
-  | Ret -> "Ret"
-  | Exit -> "Exit"
-  | Print -> "Print"
-  | LParen -> "LParen"
-  | RParen -> "RParen"
-  | Comma -> "Comma"
-  | Plus -> "Plus"
-  | Mult -> "Mult"
+  | Let -> "let"
+  | Str -> "str"
+  | I32 -> "i32"
+  | U32 -> "u32"
+  | Int -> "int"
+  | Char -> "char"
+  | Struct -> "struct"
+  | Colon -> ":"
+  | SemiColon -> ";"
+  | GreaterThan -> ">"
+  | LessThan -> "<"
+  | RightArrow -> "->"
+  | End -> "end"
+  | Proc -> "proc"
+  | Ret -> "ret"
+  | Exit -> "exit"
+  | Println -> "println"
+  | StackDump -> "stackdump"
+  | LParen -> "("
+  | RParen -> ")"
+  | Comma -> ","
+  | Plus -> "+"
+  | Mult -> "*"
   | ID -> "ID"
   | IntegerLiteral -> "IntegerLiteral"
   | StringLiteral -> "StringLiteral"
   | CharLiteral -> "CharLiteral"
-  | Equals -> "Equals"
+  | Equals -> "="
   | Binop -> "Binop"
   | EOF -> "EOF"
 
@@ -91,7 +93,8 @@ let token_print (token : token_t) : unit =
   | LessThan -> Printf.printf "LessThan\n"
   | End -> Printf.printf "End\n"
   | Exit -> Printf.printf "Exit\n"
-  | Print -> Printf.printf "Print\n"
+  | Println -> Printf.printf "Println\n"
+  | StackDump -> Printf.printf "StackDump\n"
   | Proc -> Printf.printf "Proc\n"
   | Ret -> Printf.printf "Ret\n"
   | LParen -> Printf.printf "LParen\n"

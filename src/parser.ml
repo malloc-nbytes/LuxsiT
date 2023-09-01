@@ -28,12 +28,11 @@ type node_stmt_let_t =
   { id : Token.token_t;
     expr : node_expr_t }
 
-type node_stmt_exit =
-  { expr : node_expr_t }
-
 type node_stmt_t =
   | NodeStmtExit of node_expr_t
+  | NodeStmtPrintln of node_expr_t
   | NodeStmtLet of node_stmt_let_t
+  | NodeStmtStackDump of unit
 
 type node_prog_t =
   { stmts : node_stmt_t list }
@@ -51,8 +50,8 @@ let unwrap (k : 'a option) : 'a =
   match k with
   | Some x -> x
   | None -> 
-      let _ = err "called unwrap on None value" in
-      failwith "(fatal) parser error"
+     let _ = err "called unwrap on None value" in
+     failwith "(fatal) parser error"
 
 (* Will return the token at `hd`. Does not eat it.*)
 let peek (p : parser_t) : Token.token_t option =
@@ -121,6 +120,18 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
       | None ->
          let _ = err "expected an expression after 'exit('" in
          failwith "parser error")
+  | Some t when t.tokentype = Token.Println ->
+    let p, _ = eat p in        (* eat println *)
+    let p, _ = expect p Token.LParen in
+    let p, node_expr = parse_expr p in
+    (match node_expr with
+     | Some expr ->
+        let p, _ = expect p Token.RParen in
+        let p, _ = expect p Token.SemiColon in
+        p, Some (NodeStmtPrintln expr)
+     | None ->
+        let _ = err "expected an expression after 'println('" in
+        failwith "parser error")
   | Some t when t.tokentype = Token.Let ->
      let p, _ = eat p in        (* eat let *)
      let p, id = expect p Token.ID in
@@ -132,6 +143,10 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
       | None ->
          let _ = err "invalid expression after 'let `ID` ='" in
          failwith "parser error")
+  | Some t when t.tokentype = Token.StackDump ->
+     let p, _ = eat p in        (* eat stackdump *)
+     let p, _ = expect p Token.SemiColon in
+     p, None (* no stmt found *)
   | _ -> p, None (* no stmt found *)
 
 let parse_program (p : parser_t) : node_prog_t =
