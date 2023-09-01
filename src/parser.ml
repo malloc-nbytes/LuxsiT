@@ -80,6 +80,40 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   | None -> p, None
   | _ -> failwith "todo: parse_term"
 
+let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t option) =
+  let p, term = parse_term p in
+  if term <> None then
+    let p, _ = eat p in (* eat term i.e. 1 * 2, `1` is a term, it gets eaten. *)
+    match peek p with (* figure out which binary expression to use *)
+    | Some t when t.tokentype = Token.Mult ->
+       let p, _ = expect p Token.Mult in
+       let p, rhs = parse_multiplicative_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
+        | None ->
+           let _ = err "expected expression after '*'" in
+           failwith "parser error")
+    | _ -> p, Some (NodeTerm (unwrap term))
+  else
+    p, None
+
+and parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
+  let p, term = parse_multiplicative_expr p in
+  if term <> None then
+    (* let p, _ = eat p in *) (* eat term i.e. 1 * 2, `1` is a term, it gets eaten. *)
+    match peek p with (* figure out which binary expression to use *)
+    | Some t when t.tokentype = Token.Plus ->
+       let p, _ = expect p Token.Plus in
+       let p, rhs = parse_additive_expr p in
+       (match rhs with
+        | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprAdd { lhs = unwrap term; rhs = rhs_expr }))
+        | None ->
+           let _ = err "expected expression after '+'" in
+           failwith "parser error")
+    | _ -> p, Some (unwrap term)
+  else
+    p, None
+
 and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
   if term <> None then
@@ -87,7 +121,7 @@ and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
     match peek p with (* figure out which binary expression to use *)
     | Some t when t.tokentype = Token.Plus ->
        let p, _ = expect p Token.Plus in
-       let p, rhs = parse_expr p in
+       let p, rhs = parse_additive_expr p in
        (match rhs with
         | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprAdd { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
         | None ->
@@ -95,7 +129,7 @@ and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
            failwith "parser error")
     | Some t when t.tokentype = Token.Mult ->
        let p, _ = expect p Token.Mult in
-       let p, rhs = parse_expr p in
+       let p, rhs = parse_multiplicative_expr p in
        (match rhs with
         | Some rhs_expr -> p, Some (NodeBinaryExpr (NodeBinExprMult { lhs = NodeTerm (unwrap term); rhs = rhs_expr }))
         | None ->

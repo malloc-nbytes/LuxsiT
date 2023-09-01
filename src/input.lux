@@ -1,6 +1,2 @@
-proc main
-
-let x = 1;
-let y = 2;
-let z = 3;
-println x + y + z;
+let x = 1 + 2 + 3 * 5;
+println x;
