@@ -1,5 +1,2 @@
-let x = 2;
-let y = 3;
-let z = x;
-let mult = z + x * y;
-println mult;
+let x = (1 + 2) * 3;
+println x;

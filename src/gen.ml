@@ -84,7 +84,9 @@ let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
      let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
-  | _ -> failwith "gen todo"
+  | _ -> 
+      let _ = err "gen_term: not implemented" in
+      failwith "gen error"
 
 let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
   match expr with

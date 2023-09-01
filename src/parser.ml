@@ -19,7 +19,6 @@ and node_bin_expr_t =
 and node_term_t =
   | NodeTermIntlit of node_term_intlit_t
   | NodeTermId of node_term_id_t
-  | NodeTermLParen of unit
 
 and node_expr_t =
   | NodeTerm of node_term_t
@@ -78,20 +77,12 @@ let rec parse_term (p : parser_t) : parser_t * (node_term_t option) =
   match peek p with
   | Some t when t.tokentype = Token.IntegerLiteral -> p, Some (NodeTermIntlit { intlit = t })
   | Some t when t.tokentype = Token.ID -> p, Some (NodeTermId { id = t })
-  | Some t when t.tokentype = Token.LParen ->
-     let p, _ = expect p Token.LParen in
-     let p, expr = parse_expr p in
-     (match expr with
-      | Some e ->
-         let p, _ = expect p Token.RParen in
-         p, Some (NodeTermLParen ())
-      | None ->
-         let _ = err "expected an expression after '(' in term" in
-         failwith "parser error")
   | None -> p, None
-  | _ -> failwith "todo: parse_term"
+  | _ ->
+    let _ = err ("unexpected token \"" ^ (Token.get_tokentype_as_str (unwrap (peek p)).tokentype) ^ "\" in term") in
+    failwith "parser error"
 
-let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t option) =
+and parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
   if term <> None then
     let p, _ = eat p in (* eat term i.e. 1 * 2, `1` is a term, it gets eaten. *)
@@ -108,7 +99,7 @@ let rec parse_multiplicative_expr (p : parser_t) : parser_t * (node_expr_t optio
   else
     p, None
 
-let rec parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
+and parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_multiplicative_expr p in
   if term <> None then
     (* let p, _ = eat p in *) (* do not eat here, does so in parse_multiplicative_expr *)
@@ -125,8 +116,7 @@ let rec parse_additive_expr (p : parser_t) : parser_t * (node_expr_t option) =
   else
     p, None
 
-(* was `and`, not `let` *)
-let rec parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
+and parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   let p, term = parse_term p in
   if term <> None then
     let p, _ = eat p in (* eat term i.e. 1 + 2, `1` is a term, it gets eaten. *)
@@ -151,7 +141,7 @@ let rec parse_expr (p : parser_t) : parser_t * (node_expr_t option) =
   else
     p, None
 
-let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
+and parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
   match peek p with
   | Some t when t.tokentype = Token.Exit ->
      let p, _ = eat p in        (* eat exit *)
