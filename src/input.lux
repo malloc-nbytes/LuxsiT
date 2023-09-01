@@ -1,5 +1,5 @@
 let x = 1 + 2;
 let y = 2;
 let z = 1 + x + y;
-println(x * y * z);
+println(x + y + z + 1000);
 exit(z);

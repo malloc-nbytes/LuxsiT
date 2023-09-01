@@ -121,17 +121,17 @@ let parse_stmt (p : parser_t) : parser_t * (node_stmt_t option) =
          let _ = err "expected an expression after 'exit('" in
          failwith "parser error")
   | Some t when t.tokentype = Token.Println ->
-    let p, _ = eat p in        (* eat println *)
-    let p, _ = expect p Token.LParen in
-    let p, node_expr = parse_expr p in
-    (match node_expr with
-     | Some expr ->
-        let p, _ = expect p Token.RParen in
-        let p, _ = expect p Token.SemiColon in
-        p, Some (NodeStmtPrintln expr)
-     | None ->
-        let _ = err "expected an expression after 'println('" in
-        failwith "parser error")
+     let p, _ = eat p in        (* eat println *)
+     let p, _ = expect p Token.LParen in
+     let p, node_expr = parse_expr p in
+     (match node_expr with
+      | Some expr ->
+         let p, _ = expect p Token.RParen in
+         let p, _ = expect p Token.SemiColon in
+         p, Some (NodeStmtPrintln expr)
+      | None ->
+         let _ = err "expected an expression after 'println('" in
+         failwith "parser error")
   | Some t when t.tokentype = Token.Let ->
      let p, _ = eat p in        (* eat let *)
      let p, id = expect p Token.ID in

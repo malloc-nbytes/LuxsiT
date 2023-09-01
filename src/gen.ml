@@ -13,7 +13,7 @@ let err (msg : string) : unit =
 let asm_header =
   "section .text\n" ^
   "dump:\n" ^
-  "    mov  r8, -3689348814741910323\n" ^
+  "    mov     r8, -3689348814741910323\n" ^
   "    sub     rsp, 40\n" ^
   "    mov     BYTE [rsp+31], 10\n" ^
   "    lea     rcx, [rsp+30]\n" ^
@@ -121,13 +121,13 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
        let _ = insert_var gen stmt_let.id.data in
        gen_expr gen stmt_let.expr
   | Parser.NodeStmtPrintln stmt_print ->
-      let gen = gen_expr gen stmt_print in
-      let gen = pop gen "rdi" in
-      let output = gen.output ^ "    call dump\n" in
-      { gen with output = output }
+     let gen = gen_expr gen stmt_print in
+     let gen = pop gen "rdi" in
+     let output = gen.output ^ "    call dump\n" in
+     { gen with output = output }
   | Parser.NodeStmtStackDump () ->
-    let _ = err "stack dump not implemented" in
-    failwith "gen error"
+     let _ = err "stack dump not implemented" in
+     failwith "gen error"
 
 let generate_program (program : Parser.node_prog_t) : string =
   let rec iter_prog_stmts (gen : gen_t) (lst : Parser.node_stmt_t list) : gen_t =
