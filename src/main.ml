@@ -17,7 +17,7 @@ let write_to_file (filepath : string) (asm : string) : unit =
   let oc = open_out filepath in
   let _ = output_string oc asm in
   close_out oc
-
+ 
 let perform_cmd (filepath : string) (_cmd : command) : unit =
   let _cmd, action = match _cmd with
     | Assemble -> assemble_cmd, "assembly"
@@ -25,6 +25,8 @@ let perform_cmd (filepath : string) (_cmd : command) : unit =
   let exit_code = Sys.command _cmd in
   (Printf.printf "(INFO) %s exited with code %d\n" action exit_code)
 
+(* TODO: add cli args and usage. *)
+(* TODO: take in a file. *)
 let () =
   let src = read_input_file input_filepath in
   let lexer = Lexer.parse_code src in

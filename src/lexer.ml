@@ -13,14 +13,16 @@ let populate_symbols () : unit =
   let _ = Hashtbl.add symbols ';' Token.SemiColon in
   let _ = Hashtbl.add symbols ',' Token.Comma in
   let _ = Hashtbl.add symbols '+' Token.Plus in
-  let _ = Hashtbl.add symbols '/' Token.Binop in
   let _ = Hashtbl.add symbols '*' Token.Mult in
+  let _ = Hashtbl.add symbols '/' Token.Binop in (* TODO: make own type. *)
   let _ = Hashtbl.add symbols '<' Token.LessThan in
   let _ = Hashtbl.add symbols '>' Token.GreaterThan in
   ()
 
 let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "let" Token.Let in
+  let _ = Hashtbl.add keywords "if" Token.If in
+  let _ = Hashtbl.add keywords "then" Token.Then in
   let _ = Hashtbl.add keywords "str" Token.Str in
   let _ = Hashtbl.add keywords "proc" Token.Proc in
   let _ = Hashtbl.add keywords "ret" Token.Ret in
@@ -86,36 +88,30 @@ let parse_code (src : string) : lexer_t =
        (match is_identifier hd with
         | Some id -> parse_code' tl (acc @ [Token.token_create_wchar hd id])
         | None ->
-           (* Multichar token
-              - isalpha hd -> is a variable/function name
-              - isnum hd -> is an integer literal
-              - hd = '"' -> is a string literal 
-              - hd = '/'' -> is a char literal
-              - hd = '"' -> hd is a string literal *)
-           (if isalpha hd || hd = '_' then
+           (if isalpha hd || hd = '_' then (* Multichar token. *)
               let multichar, rest = consume_while (hd :: tl) (fun k -> isalnum k || k = '_') in
               match is_keyword multichar with
               | None -> parse_code' rest (acc @ [Token.token_create_wstr multichar Token.ID])
               | Some tokentype -> parse_code' rest (acc @ [Token.token_create_wstr multichar tokentype])
 
-            else if isnum hd then
+            else if isnum hd then (* Number token. *)
               let intlit, rest = consume_while (hd :: tl) isnum in
               parse_code' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
 
-            else if hd = '\'' then
+            else if hd = '\'' then (* Character literal token *)
               let charlit, rest = consume_while tl (fun c -> c <> '\'') in
               (* (List.tl rest) to consume extra quote *)
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr charlit Token.CharLiteral])
 
-            else if hd = '"' then
+            else if hd = '"' then (* String literal token. *)
               let str, rest = consume_while tl (fun c -> c <> '"') in
               (* (List.tl rest) to consume extra quote *)
               parse_code' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
-            else if hd = '-' then
+            else if hd = '-' then (* Minus or right arrow `->` token. *)
               match peek tl 0 with
               | Some k when k = '>' -> parse_code' (List.tl tl) (acc @ [Token.token_create_wstr "->" Token.RightArrow])
-              | Some k -> parse_code' tl (acc @ [Token.token_create_wchar hd Token.Binop])
+              | Some k -> parse_code' tl (acc @ [Token.token_create_wchar hd Token.Binop]) (* TODO: make own type. *)
               | None -> failwith "Lexer ERR: found `None` when parsing `-`"
 
             else

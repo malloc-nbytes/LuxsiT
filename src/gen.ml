@@ -142,7 +142,7 @@ let generate_program (program : Parser.node_prog_t) : string =
 
   let gen = iter_prog_stmts gen program.stmts in
 
-  (* Obligatory exit for when the programmer forgets (>д<) *)
+  (* Obligatory exit for when the programmer forgets (ノ-_-)ノ ~┻━┻ *)
 
   let output = gen.output in
   let output = output ^ "    ; Obligatory exit\n" in

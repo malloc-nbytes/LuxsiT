@@ -7,29 +7,35 @@ type tokentype_t =
   | Char
   | Struct
 
-  (* Other. *)
+  (* Keywords *)
   | Let
-  | RightArrow
+  | Then
+  | If
   | End
-  | GreaterThan
-  | LessThan
-  | Comma
   | Ret
-  | Colon
   | Proc
   | Exit
   | Println
+
+  (* Symbols *)
+  | RightArrow
+  | GreaterThan
+  | LessThan
+  | Comma
+  | Colon
   | SemiColon
   | LParen
   | RParen
-  | ID
-  | StringLiteral
-  | CharLiteral
-  | IntegerLiteral
   | Equals
   | Binop
   | Plus
   | Mult
+
+  (* Other *)
+  | ID
+  | StringLiteral
+  | CharLiteral
+  | IntegerLiteral
   | EOF
 
 type token_t =
@@ -42,9 +48,12 @@ let token_create_wchar (data : char) (tokentype : tokentype_t) : token_t =
 let token_create_wstr (data : string) (tokentype : tokentype_t) : token_t =
   { data = data; tokentype = tokentype }
 
+(* For use in error messages. *)
 let get_tokentype_as_str (tokentype : tokentype_t) : string =
   match tokentype with
   | Let -> "`let`"
+  | If -> "`if`"
+  | Then -> "`then`"
   | Str -> "`str`"
   | I32 -> "`i32`"
   | U32 -> "`u32`"
@@ -75,9 +84,12 @@ let get_tokentype_as_str (tokentype : tokentype_t) : string =
   | EOF -> "`EOF`"
 
 
+(* Debugging printing tokens. *)
 let token_print (token : token_t) : unit =
   match token.tokentype with
   | Let -> Printf.printf "Let\n"
+  | If -> Printf.printf "If\n"
+  | Then -> Printf.printf "Then\n"
   | Str -> Printf.printf "Str\n"
   | I32 -> Printf.printf "I32\n"
   | U32 -> Printf.printf "U32\n"
