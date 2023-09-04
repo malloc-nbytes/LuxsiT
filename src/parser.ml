@@ -1,33 +1,54 @@
+type node_type_t =
+  | NodeProgram
+  | NodeExprStmt
+  | NodeID
+  | NodeIntegerLiteral
+  | NodeBinaryExpr
+  | NodeLet
+  | NodeExit
+  | NodePrintln
+
 type stmt_t =
   | ExprStmt of expr_t
 
 and expr_t =
-  | ID of identifier_t
+  | ID of id_t
   | IntegerLiteral of integer_literal_t
-  | BinaryExpr of binary_expr_t
+  | BinaryExpr of bin_expr_t
   | Let of let_t
   | Exit of exit_t
+  | Println of println_t
 
 and program_t =
-  { body : stmt_t list }
+  { _type : node_type_t
+  ; body : stmt_t list }
 
-and binary_expr_t =
-  { left : expr_t
+and bin_expr_t =
+  { _type : node_type_t
+  ; left : expr_t
   ; right : expr_t
   ; operator : string }
 
-and identifier_t =
-  { op : string }
+and id_t =
+  { _type : node_type_t
+  ; name : string }
 
 and integer_literal_t =
-  { value : string }
+  { _type : node_type_t
+  ; value : string }
 
 and let_t =
-  { id : identifier_t
+  { _type : node_type_t
+  ; id : id_t
   ; expr : expr_t }
 
 and exit_t =
-  { expr : expr_t }
+  { _type : node_type_t
+  ; expr : expr_t }
+
+and println_t =
+  { _type : node_type_t
+  ; expr : expr_t }
 
 type parser_t =
   { tokens : Token.token_t list }
@@ -35,6 +56,8 @@ type parser_t =
 let err (msg : string) : unit =
   print_endline msg
 
+let parser_create (tokens : Token.token_t list) : parser_t =
+  { tokens }
 
 let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   match p.tokens with
@@ -65,18 +88,23 @@ let rec parse_primary_expr (p : parser_t) : parser_t * expr_t =
     let p, _ = expect p Token.Equals in
     let p, expr = parse_expr p in
     let p, _ = expect p Token.SemiColon in
-    p, Let { id = { op = id.data }; expr }
+    p, Let { _type = NodeLet; id = { _type = NodeID; name = id.data }; expr }
+  | t when t.tokentype = Token.Println ->
+    let p, _ = eat p in
+    let p, expr = parse_expr p in
+    let p, _ = expect p Token.SemiColon in
+    p, Println { _type = NodePrintln; expr }
   | t when t.tokentype = Token.Exit ->
     let p, _ = eat p in
     let p, expr = parse_expr p in
     let p, _ = expect p Token.SemiColon in
-    p, Exit { expr }
+    p, Exit { _type = NodeExit; expr }
   | t when t.tokentype = Token.ID ->
     let p, t = eat p in
-    p, ID { op = t.data }
+    p, ID { _type = NodeLet; name = t.data }
   | t when t.tokentype = Token.IntegerLiteral ->
     let p, t = eat p in
-    p, IntegerLiteral { value = t.data }
+    p, IntegerLiteral { _type = NodeIntegerLiteral; value = t.data }
   | t when t.tokentype = Token.LParen ->
     let p, _ = eat p in
     let p, expr = parse_expr p in
@@ -92,7 +120,7 @@ and parse_multiplicitave_expr (p : parser_t) : parser_t * expr_t =
     | t when t.tokentype = Token.Mult ->
       let p, t = eat p in
       let p, rhs = parse_primary_expr p in
-      parse_multiplicitave_expr p (BinaryExpr { left = lhs; right = rhs; operator = t.data })
+      parse_multiplicitave_expr p (BinaryExpr { _type = NodeBinaryExpr; left = lhs; right = rhs; operator = t.data })
     | _ -> p, lhs in
   parse_multiplicitave_expr p lhs
 
@@ -104,7 +132,7 @@ and parse_additive_expr (p : parser_t) : parser_t * expr_t =
     | t when t.tokentype = Token.Plus ->
       let p, t = eat p in
       let p, rhs = parse_multiplicitave_expr p in
-      parse_additive_expr p (BinaryExpr { left = lhs; right = rhs; operator = t.data })
+      parse_additive_expr p (BinaryExpr { _type = NodeBinaryExpr; left = lhs; right = rhs; operator = t.data })
     | _ -> p, lhs in
   parse_additive_expr p lhs
 
@@ -120,7 +148,7 @@ let parse_stmt (p : parser_t) : parser_t * stmt_t =
 
 
 (* Entrypoint. *)
-let produce_ast (tokens : Token.token_t list) : program_t =
+let parse_program (tokens : Token.token_t list) : program_t =
   let p = { tokens } in
   let rec produce_program (p : parser_t) (program : program_t) : program_t =
     match p.tokens with
@@ -128,9 +156,9 @@ let produce_ast (tokens : Token.token_t list) : program_t =
     | hd :: _ when hd.tokentype = Token.EOF -> program
     | _ -> 
       let p, stmt = parse_stmt p in
-      produce_program p { body = program.body @ [stmt] }
+      produce_program p { program with body = program.body @ [stmt] }
   in
-  produce_program p { body = [] }
+  produce_program p { _type = NodeProgram; body = [] }
 
 
 (* Debugging. *)
@@ -138,7 +166,7 @@ let rec print_expr (expr : expr_t) (indent : int) : unit =
   let indentation = String.make (2 * indent) ' ' in
   match expr with
   | ID id ->
-    Printf.printf "%sID: %s\n" indentation id.op
+    Printf.printf "%sID: %s\n" indentation id.name
   | IntegerLiteral lit ->
     Printf.printf "%sIntegerLiteral: %s\n" indentation lit.value
   | BinaryExpr bin_expr ->
@@ -150,13 +178,17 @@ let rec print_expr (expr : expr_t) (indent : int) : unit =
     print_expr bin_expr.right (indent + 1)
   | Let let_expr ->
     Printf.printf "%sLet:\n" indentation;
-    Printf.printf "%s  ID: %s\n" indentation let_expr.id.op;
+    Printf.printf "%s  ID: %s\n" indentation let_expr.id.name;
     Printf.printf "%s  Expr:\n" indentation;
     print_expr let_expr.expr (indent + 1)
   | Exit exit_expr ->
     Printf.printf "%sExit:\n" indentation;
     Printf.printf "%s  Expr:\n" indentation;
     print_expr exit_expr.expr (indent + 1)
+  | Println println_expr ->
+    Printf.printf "%sPrintln:\n" indentation;
+    Printf.printf "%s  Expr:\n" indentation;
+    print_expr println_expr.expr (indent + 1)
 
 
 let rec print_stmt (stmt : stmt_t) (indent : int) : unit =
@@ -177,7 +209,7 @@ let print_program_structure (program : program_t) : unit =
   print_program program 0
 
 
-let () =
+(* let () = ()
   let lexer = Lexer.parse_code "let tmp = 1 + (2 * 3);" in
   let program = produce_ast lexer.tokens in
-  print_program_structure program
+  print_program_structure program *)
