@@ -33,6 +33,7 @@
 * [[/home/dev/luxsit/src/gen.ml][gen.ml]] [0%]
   - [ ] find a solution to not have =asm_header=
 
-* Other [100%]
+* Other [0%]
   - [ ] rename /luxsit/ $\rightarrow$ /LuxsiT/
   - [ ] update grammar to show parenthesized expressions
+  - [ ] use `~` in /todo.org/ for links
