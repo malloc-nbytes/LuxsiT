@@ -5,20 +5,29 @@ and expr_t =
   | ID of identifier_t
   | IntegerLiteral of integer_literal_t
   | BinaryExpr of binary_expr_t
+  | Let of let_t
+  | Exit of exit_t
 
 and program_t =
   { body : stmt_t list }
 
-and binary_expr_t = 
+and binary_expr_t =
   { left : expr_t
   ; right : expr_t
   ; operator : string }
 
-and identifier_t = 
+and identifier_t =
   { op : string }
 
-and integer_literal_t = 
+and integer_literal_t =
   { value : string }
+
+and let_t =
+  { id : identifier_t
+  ; expr : expr_t }
+
+and exit_t =
+  { expr : expr_t }
 
 type parser_t =
   { tokens : Token.token_t list }
@@ -50,6 +59,18 @@ let at (p : parser_t) : Token.token_t =
 
 let rec parse_primary_expr (p : parser_t) : parser_t * expr_t =
   match at p with
+  | t when t.tokentype = Token.Let ->
+    let p, _ = eat p in
+    let p, id = expect p Token.ID in
+    let p, _ = expect p Token.Equals in
+    let p, expr = parse_expr p in
+    let p, _ = expect p Token.SemiColon in
+    p, Let { id = { op = id.data }; expr }
+  | t when t.tokentype = Token.Exit ->
+    let p, _ = eat p in
+    let p, expr = parse_expr p in
+    let p, _ = expect p Token.SemiColon in
+    p, Exit { expr }
   | t when t.tokentype = Token.ID ->
     let p, t = eat p in
     p, ID { op = t.data }
@@ -57,7 +78,7 @@ let rec parse_primary_expr (p : parser_t) : parser_t * expr_t =
     let p, t = eat p in
     p, IntegerLiteral { value = t.data }
   | t when t.tokentype = Token.LParen ->
-    let p, _ = expect p Token.LParen in
+    let p, _ = eat p in
     let p, expr = parse_expr p in
     let p, _ = expect p Token.RParen in
     p, expr
@@ -127,6 +148,15 @@ let rec print_expr (expr : expr_t) (indent : int) : unit =
     print_expr bin_expr.left (indent + 1);
     Printf.printf "%s  Right:\n" indentation;
     print_expr bin_expr.right (indent + 1)
+  | Let let_expr ->
+    Printf.printf "%sLet:\n" indentation;
+    Printf.printf "%s  ID: %s\n" indentation let_expr.id.op;
+    Printf.printf "%s  Expr:\n" indentation;
+    print_expr let_expr.expr (indent + 1)
+  | Exit exit_expr ->
+    Printf.printf "%sExit:\n" indentation;
+    Printf.printf "%s  Expr:\n" indentation;
+    print_expr exit_expr.expr (indent + 1)
 
 
 let rec print_stmt (stmt : stmt_t) (indent : int) : unit =
@@ -148,6 +178,6 @@ let print_program_structure (program : program_t) : unit =
 
 
 let () =
-  let lexer = Lexer.parse_code "10 + (5 * 3)" in
+  let lexer = Lexer.parse_code "let tmp = 1 + (2 * 3);" in
   let program = produce_ast lexer.tokens in
   print_program_structure program
