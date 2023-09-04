@@ -1,4 +1,4 @@
-type cmd =
+type command =
   | Assemble
   | Link
 
@@ -18,7 +18,7 @@ let write_to_file (filepath : string) (asm : string) : unit =
   let _ = output_string oc asm in
   close_out oc
 
-let perform_cmd (filepath : string) (_cmd : cmd) : unit =
+let perform_cmd (filepath : string) (_cmd : command) : unit =
   let _cmd, action = match _cmd with
     | Assemble -> assemble_cmd, "assembly"
     | Link -> link_cmd, "linking" in
@@ -30,7 +30,8 @@ let () =
   let lexer = Lexer.parse_code src in
   (* Lexer.lexer_dump lexer; *)
   let parse = Parser.parser_create lexer.tokens in
-  let prog : Parser.node_prog_t = Parser.parse_program parse in
+  let prog : Parser.node_prog_t = Parser.parse_program parse.tokens in
+
   let output = Gen.generate_program prog in
 
   let _ = write_to_file output_filepath output in
