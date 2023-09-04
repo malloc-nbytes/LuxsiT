@@ -13,18 +13,18 @@ let read_input_file filename =
 
 
 (* Write the generated assembly out to file. *)
-let write_to_file (filepath : string) (asm : string) : unit =
+let write_to_file filepath asm : unit =
   let oc = open_out filepath in
   let _ = output_string oc asm in
   close_out oc
 
 
-let assemble (filepath : string) : unit =
+let assemble filepath : unit =
   let exit_code = Sys.command assemble_cmd in
   Printf.printf "(INFO) Assembler exited with code %d\n" exit_code
 
 
-let link (filepath : string) : unit =
+let link filepath : unit =
   let exit_code = Sys.command link_cmd in
   Printf.printf "(INFO) Linker exited with code %d\n" exit_code
 

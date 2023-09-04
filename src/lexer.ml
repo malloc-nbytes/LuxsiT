@@ -40,34 +40,34 @@ let populate_keywords () : unit =
   ()
 
 
-let lexer_create (tokens : Token.token_t list) : lexer_t =
+let lexer_create tokens : lexer_t =
   { tokens = tokens }
 
 
-let isalpha (c : char) : bool =
+let isalpha c : bool =
   let c = int_of_char c in
   (c >= 65 && c <= 90) || (c >= 97 && c <= 122)
 
 
-let isnum (c : char) : bool =
+let isnum c : bool =
   let c = int_of_char c in
   let c = c - int_of_char '0' in
   (c >= 0) && (c <= 9)
 
 
-let isalnum (c : char) : bool =
+let isalnum c : bool =
   isalpha c || isnum c
 
 
-let isignorable (c : char) : bool =
+let isignorable c : bool =
   c = ' ' || c = '\n' || c = '\t'
 
 
 (* Will consume characters given the predicate `cond`.
    Will NOT consume the character that fails `cond`.
    This is expected to be done by caller. *)
-let consume_while (lst : char list) (cond : char -> bool) : string * char list =
-  let rec aux (lst : char list) (acc : string) : string * char list =
+let consume_while lst (cond : 'a -> 'b) : string * char list =
+  let rec aux lst acc : string * char list =
     match lst with
     | [] -> acc, []
     | hd :: tl when cond hd -> aux tl (acc ^ String.make 1 hd)
@@ -76,20 +76,20 @@ let consume_while (lst : char list) (cond : char -> bool) : string * char list =
 
 
 (* Checks if a string is one of the reserved keywords. *)
-let is_keyword (str : string) : Token.tokentype_t option =
+let is_keyword str : Token.tokentype_t option =
   try Some (Hashtbl.find keywords str)
   with Not_found -> None
 
 
 (* Checks if a string is one of the reserved symbols. *)
-let is_symbol (c : char) : Token.tokentype_t option =
+let is_symbol c : Token.tokentype_t option =
   try Some (Hashtbl.find symbols c)
   with Not_found -> None
 
 
 (* Peek `ahead` amount of spaces in the characters. *)
-let peek (lst : char list) (ahead : int) : char option =
-  let rec peek' (lst : char list) (i : int) : char option =
+let peek lst ahead : char option =
+  let rec peek' lst i : char option =
     match lst with
     | [] -> None
     | hd :: _ when i = ahead -> Some hd
@@ -98,8 +98,8 @@ let peek (lst : char list) (ahead : int) : char option =
 
 
 (* Create tokens from a string. *)
-let lex_tokens (src : string) : lexer_t =
-  let rec lex_tokens' (lst : char list) (acc : Token.token_t list) : lexer_t =
+let lex_tokens src : lexer_t =
+  let rec lex_tokens' lst acc : lexer_t =
     match lst with
     | [] -> lexer_create (acc @ [Token.token_create_wstr "EOF" Token.EOF])
     | hd :: tl when isignorable hd -> lex_tokens' tl acc
@@ -142,7 +142,7 @@ let lex_tokens (src : string) : lexer_t =
 
 
 (* Print everything in the lexer. Used for debugging. *)
-let lexer_dump (lexer : lexer_t) : unit =
+let lexer_dump lexer : unit =
   List.iter (fun token ->
       Printf.printf "%s\n"
         (Token.tokentype_tostr token.Token.tokentype)

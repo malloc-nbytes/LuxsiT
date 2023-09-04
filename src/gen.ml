@@ -6,7 +6,7 @@ type gen_t =
     stackptr : int;
     vars : (string, var_t) Hashtbl.t }
 
-let err (msg : string) : unit =
+let err msg : unit =
   Printf.printf "(ERR) %s\n" msg
 
 (* QAD solution for printing. *)
@@ -44,31 +44,31 @@ let asm_header =
   "global _start\n" ^
   "_start:\n"
 
-let var_exists (gen : gen_t) (name : string) : bool =
+let var_exists gen name : bool =
   Hashtbl.mem gen.vars name
 
-let get_var (gen : gen_t) (name : string) : var_t option =
+let get_var gen name : var_t option =
   if var_exists gen name then
     let var = Hashtbl.find gen.vars name in
     Some var
   else
     None
 
-let insert_var (gen : gen_t) (name : string) : unit =
+let insert_var gen name : unit =
   let v = { stackloc = gen.stackptr } in
   Hashtbl.add gen.vars name v
 
-let push (gen : gen_t) (reg : string) : gen_t =
+let push gen register : gen_t =
   let output = gen.output in
-  let output = output ^ "    push " ^ reg ^ "\n" in
+  let output = output ^ "    push " ^ register ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr + 1 }
 
-let pop (gen : gen_t) (reg : string) : gen_t =
+let pop gen register : gen_t =
   let output = gen.output in
-  let output = output ^ "    pop " ^ reg ^ "\n" in
+  let output = output ^ "    pop " ^ register ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr - 1 }
 
-let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
+let gen_term gen term : gen_t =
   match term with
   | Parser.NodeTermIntLit term_intlit ->
      let output = gen.output in
@@ -85,7 +85,7 @@ let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
 
-let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
+let rec gen_expr gen expr : gen_t =
   match expr with
   | Parser.NodeTerm term -> gen_term gen term
   | Parser.NodeBinExpr bin_expr ->
@@ -124,7 +124,7 @@ let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
          push { gen with output = output } "rax"
       | _ -> failwith "gen error: unknown binary operator")
 
-let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
+let generate_stmt gen stmt : gen_t =
   match stmt with
   | Parser.NodeStmtExit stmt_exit ->
      let gen = gen_expr gen stmt_exit.expr in
@@ -145,7 +145,7 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let output = gen.output ^ "    call dump\n" in
      { gen with output = output }
 
-let generate_program (program : Parser.node_prog_t) : string =
+let generate_program program : string =
   let rec iter_prog_stmts (gen : gen_t) (lst : Parser.node_stmt_t list) : gen_t =
     match lst with
     | [] -> gen
@@ -156,7 +156,7 @@ let generate_program (program : Parser.node_prog_t) : string =
               stackptr = 0;
               vars = Hashtbl.create 20 } in
 
-  let gen = iter_prog_stmts gen program.stmts in
+  let gen = iter_prog_stmts gen program.Parser.stmts in
 
   (* Obligatory exit for when the programmer forgets (ノ-_-)ノ ~┻━┻ *)
 

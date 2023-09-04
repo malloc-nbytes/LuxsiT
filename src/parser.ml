@@ -38,12 +38,13 @@ and node_stmt_println_t =
 type parser_t =
   { tokens : Token.token_t list }
 
-let err (msg : string) : unit = print_endline msg
+let err msg : unit =
+  print_endline msg
 
-let parser_create (tokens : Token.token_t list) : parser_t =
+let parser_create tokens : parser_t =
   { tokens }
 
-let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
+let expect p expected_type : parser_t * Token.token_t =
   match p.tokens with
   | [] -> failwith "no more tokens"
   | hd :: tl when hd.tokentype = expected_type -> { tokens = tl }, hd
@@ -52,7 +53,7 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
      failwith "expected token"
 
 
-let eat (p : parser_t) : parser_t * Token.token_t =
+let eat p : parser_t * Token.token_t =
   match p.tokens with
   | [] ->
      let _ = err "no tokens error" in
@@ -60,7 +61,7 @@ let eat (p : parser_t) : parser_t * Token.token_t =
   | hd :: tl -> { tokens = tl }, hd
 
 
-let at (p : parser_t) : Token.token_t =
+let at p : Token.token_t =
   match p.tokens with
   | [] ->
      let _ = err "no tokens error" in
@@ -68,7 +69,7 @@ let at (p : parser_t) : Token.token_t =
   | hd :: _ -> hd
 
 
-let rec parse_primary_expr (p : parser_t) : parser_t * node_expr_t =
+let rec parse_primary_expr p : parser_t * node_expr_t =
   match at p with
   | t when t.tokentype = Token.ID ->
      let p, t = eat p in
@@ -86,7 +87,7 @@ let rec parse_primary_expr (p : parser_t) : parser_t * node_expr_t =
      failwith "unexpected token"
 
 
-and parse_multiplicitave_expr (p : parser_t) : parser_t * node_expr_t =
+and parse_multiplicitave_expr p : parser_t * node_expr_t =
   let p, lhs = parse_primary_expr p in
   let rec parse_multiplicitave_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
@@ -98,7 +99,7 @@ and parse_multiplicitave_expr (p : parser_t) : parser_t * node_expr_t =
   parse_multiplicitave_expr p lhs
 
 
-and parse_additive_expr (p : parser_t) : parser_t * node_expr_t =
+and parse_additive_expr p : parser_t * node_expr_t =
   let p, lhs = parse_multiplicitave_expr p in
   let rec parse_additive_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
@@ -110,12 +111,12 @@ and parse_additive_expr (p : parser_t) : parser_t * node_expr_t =
   parse_additive_expr p lhs
 
 
-and parse_expr (p : parser_t) : parser_t * node_expr_t =
+and parse_expr p : parser_t * node_expr_t =
   let p, expr = parse_additive_expr p in
   p, expr
 
 
-let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
+let parse_stmt p : parser_t * node_stmt_t =
   match at p with
   | t when t.tokentype = Token.Exit ->
      let p, _ = eat p in
@@ -140,9 +141,9 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
 
 
 (* Entrypoint. *)
-let parse_program (tokens : Token.token_t list) : node_prog_t =
+let parse_program tokens : node_prog_t =
   let p = { tokens } in
-  let rec produce_program (p : parser_t) (program : node_prog_t) : node_prog_t =
+  let rec produce_program p program : node_prog_t =
     match p.tokens with
     | [] -> program
     | hd :: _ when hd.tokentype = Token.EOF -> program

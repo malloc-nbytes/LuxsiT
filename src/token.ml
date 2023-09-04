@@ -44,15 +44,15 @@ type token_t =
     tokentype : tokentype_t }
 
 (* Create a token from a character. *)
-let token_create_wchar (data : char) (tokentype : tokentype_t) : token_t =
+let token_create_wchar data tokentype : token_t =
   { data = String.make 1 data; tokentype = tokentype }
 
 (* Create a token from a string. *)
-let token_create_wstr (data : string) (tokentype : tokentype_t) : token_t =
+let token_create_wstr data tokentype : token_t =
   { data = data; tokentype = tokentype }
 
 (* For use in error messages. *)
-let tokentype_tostr (tokentype : tokentype_t) : string =
+let tokentype_tostr tokentype : string =
   match tokentype with
   (* Datatypes *)
   | Str -> "`str`"

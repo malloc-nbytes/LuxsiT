@@ -35,10 +35,10 @@
 * [[/home/dev/luxsit/src/gen.ml][gen.ml]] [0%]
   - [ ] find a solution to not have =asm_header=
 
-* Other [0%]
-  - [ ] clean up types in function definitions
+* Other [33%]
+  - [X] clean up types in function definitions
   - [ ] create file =helper.ml= and put repeated functions in it i.e. =err=
   - [ ] create file =err.ml= and put custom error types there
-  - [ ] rename /luxsit/ $\rightarrow$ /LuxsiT/
+  - [X] rename /luxsit/ $\rightarrow$ /LuxsiT/
   - [ ] update grammar to show parenthesized expressions
   - [ ] use `~` in /todo.org/ for links
