@@ -9,7 +9,6 @@ let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 20
 let populate_symbols () : unit =
   let _ = Hashtbl.add symbols '(' Token.LParen in
   let _ = Hashtbl.add symbols ')' Token.RParen in
-  let _ = Hashtbl.add symbols '=' Token.Equals in
   let _ = Hashtbl.add symbols ':' Token.Colon in
   let _ = Hashtbl.add symbols ';' Token.SemiColon in
   let _ = Hashtbl.add symbols ',' Token.Comma in
@@ -37,6 +36,7 @@ let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "char" Token.Char in
   let _ = Hashtbl.add keywords "struct" Token.Struct in
   let _ = Hashtbl.add keywords "end" Token.End in
+  let _ = Hashtbl.add keywords "const" Token.Const in
   ()
 
 
@@ -117,6 +117,12 @@ let lex_tokens src : lexer_t =
               let intlit, rest = consume_while (hd :: tl) isnum in
               lex_tokens' rest (acc @ [Token.token_create_wstr intlit Token.IntegerLiteral])
 
+            else if hd = '=' then
+              match peek tl 0 with
+              | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "==" Token.Equality])
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Assignment])
+              | None -> failwith "Lexer ERR: found `None` when parsing `=`"
+
             else if hd = '\'' then (* Character literal token *)
               let charlit, rest = consume_while tl (fun c -> c <> '\'') in
               (* (List.tl rest) to consume extra quote *)
@@ -130,7 +136,7 @@ let lex_tokens src : lexer_t =
             else if hd = '-' then (* Minus or right arrow `->` token. *)
               match peek tl 0 with
               | Some k when k = '>' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "->" Token.RightArrow])
-              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Hyphen]) (* TODO: make own type. *)
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Hyphen])
               | None -> failwith "Lexer ERR: found `None` when parsing `-`"
 
             else

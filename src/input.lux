@@ -1,4 +1,6 @@
-let x = 10 - 2 * 2;
-println x;
+let a = 1;
+let b = 2;
+
+println a + b;
 
 exit 0;

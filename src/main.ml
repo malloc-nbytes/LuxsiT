@@ -32,7 +32,7 @@ let link filepath : unit =
 let main () =
   let src = read_input_file input_filepath in
   let lexer = Lexer.lex_tokens src in
-  (* Lexer.lexer_dump lexer; *)
+  Lexer.lexer_dump lexer;
 
   let parser = Parser.parser_create lexer.tokens in
   let program = Parser.parse_program parser.tokens in

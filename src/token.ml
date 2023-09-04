@@ -16,6 +16,7 @@ type tokentype_t =
   | Proc
   | Exit
   | Println
+  | Const
 
   (* Symbols *)
   | RightArrow
@@ -26,7 +27,8 @@ type tokentype_t =
   | SemiColon
   | LParen
   | RParen
-  | Equals
+  | Assignment
+  | Equality
   | Plus
   | Hyphen
   | ForwardSlash
@@ -71,6 +73,7 @@ let tokentype_tostr tokentype : string =
   | Ret -> "`ret`"
   | Exit -> "`exit`"
   | Println -> "`println`"
+  | Const -> "`const`"
 
   (* Symbols *)
   | Colon -> "`:`"
@@ -85,7 +88,8 @@ let tokentype_tostr tokentype : string =
   | Hyphen -> "`-`"
   | ForwardSlash -> "`/`"
   | Asterisk -> "`*`"
-  | Equals -> "`=`"
+  | Assignment -> "`=`"
+  | Equality -> "`==`"
 
   (* Other *)
   | ID -> "`ID`"

@@ -1,4 +1,4 @@
-open Ast
+open Parser
 
 type var_t =
   { stackloc : int }
@@ -67,7 +67,7 @@ let pop gen register : gen_t =
   let output = output ^ "    pop " ^ register ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr - 1 }
 
-let gen_term gen term : gen_t =
+let gen_term (gen : gen_t) (term : node_term_t) : gen_t =
   match term with
   | NodeTermIntLit term_intlit ->
      let output = gen.output in
@@ -84,7 +84,7 @@ let gen_term gen term : gen_t =
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
 
-let rec gen_expr gen expr : gen_t =
+let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
   match expr with
   | NodeTerm term -> gen_term gen term
   | NodeBinExpr bin_expr ->
@@ -123,6 +123,11 @@ let rec gen_expr gen expr : gen_t =
          push { gen with output = output } "rax"
       | _ -> failwith "gen error: unknown binary operator")
 
+let unwrap (a : 'a option) : 'a =
+  match a with
+  | Some a -> a
+  | None -> failwith "gen error: unwrap failed"
+
 let generate_stmt gen stmt : gen_t =
   match stmt with
   | NodeStmtExit stmt_exit ->
@@ -131,20 +136,24 @@ let generate_stmt gen stmt : gen_t =
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
-  | NodeStmtLet stmt_let ->
-     if var_exists gen stmt_let.id.data then
-       let _ = Err.err ("ID " ^ stmt_let.id.data ^ " is already defined") in
+  | NodeStmtVarDecl stmt_var_decl ->
+     if var_exists gen stmt_var_decl.id.data then
+       let _ = Err.err ("ID " ^ stmt_var_decl.id.data ^ " is already defined") in
        failwith "gen error"
      else
-       let _ = insert_var gen stmt_let.id.data in
-       gen_expr gen stmt_let.expr
+       let _ = insert_var gen stmt_var_decl.id.data in
+       if stmt_var_decl.expr <> None then
+        let _ = if stmt_var_decl.constant then failwith "gen: constants not implemented" in
+        gen_expr gen @@ unwrap stmt_var_decl.expr
+       else
+        failwith "undefined variables not implemented"
   | NodeStmtPrintln stmt_print ->
      let gen = gen_expr gen stmt_print.expr in
      let gen = pop gen "rdi" in
      let output = gen.output ^ "    call dump\n" in
      { gen with output = output }
 
-let generate_program program : string =
+let generate_program (program : node_prog_t) : string =
   let rec iter_prog_stmts (gen : gen_t) (lst : node_stmt_t list) : gen_t =
     match lst with
     | [] -> gen

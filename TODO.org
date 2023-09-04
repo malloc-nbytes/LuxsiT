@@ -28,7 +28,6 @@
   - [X] add support for `/`
   - [X] move all node types to a separate file named /ast.ml/
   - [ ] better error reporting
-  - [ ] create custom errors with an algebraic type; refer to *Other* for new file
   - [ ] rename the longer functions
   - [ ] add comments on all functions
 
