@@ -10,6 +10,7 @@ let err (msg : string) : unit =
   Printf.printf "(ERR) %s\n" msg
 
 (* QAD solution for printing. *)
+(* TODO: remove later. *)
 let asm_header =
   "section .text\n" ^
   "dump:\n" ^
@@ -75,12 +76,11 @@ let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
      push ({ gen with output = output }) "rax"
   | Parser.NodeTermID term_id ->
      let var : var_t =
-       match get_var gen term_id.id.data with
-       | Some var -> var
-       | None ->
-          let _ = err ("undeclared ID " ^ term_id.id.data ^ "\n") in
-          failwith "gen error" in
-
+       (match get_var gen term_id.id.data with
+        | Some var -> var
+        | None ->
+           let _ = err ("undeclared ID " ^ term_id.id.data ^ "\n") in
+           failwith "gen error") in
      let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
@@ -91,21 +91,21 @@ let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
   | Parser.NodeBinExpr bin_expr ->
      (match bin_expr.op with
       | "+" ->
-        let gen = gen_expr gen bin_expr.lhs in
-        let gen = gen_expr gen bin_expr.rhs in
-        let gen = pop gen "rdi" in
-        let gen = pop gen "rax" in
-        let output = gen.output in
-        let output = output ^ "    add rax, rdi\n" in
-        push { gen with output = output } "rax"
+         let gen = gen_expr gen bin_expr.lhs in
+         let gen = gen_expr gen bin_expr.rhs in
+         let gen = pop gen "rdi" in
+         let gen = pop gen "rax" in
+         let output = gen.output in
+         let output = output ^ "    add rax, rdi\n" in
+         push { gen with output = output } "rax"
       | "*" ->
-        let gen = gen_expr gen bin_expr.lhs in
-        let gen = gen_expr gen bin_expr.rhs in
-        let gen = pop gen "rdi" in
-        let gen = pop gen "rax" in
-        let output = gen.output in
-        let output = output ^ "    imul rax, rdi\n" in
-        push { gen with output = output } "rax"
+         let gen = gen_expr gen bin_expr.lhs in
+         let gen = gen_expr gen bin_expr.rhs in
+         let gen = pop gen "rdi" in
+         let gen = pop gen "rax" in
+         let output = gen.output in
+         let output = output ^ "    imul rax, rdi\n" in
+         push { gen with output = output } "rax"
       | _ -> failwith "gen error: unknown binary operator")
 
 let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
@@ -123,11 +123,11 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      else
        let _ = insert_var gen stmt_let.id.data in
        gen_expr gen stmt_let.expr
-  (* | Parser.NodeStmtPrintln stmt_print ->
-     let gen = gen_expr gen stmt_print in
+  | Parser.NodeStmtPrintln stmt_print ->
+     let gen = gen_expr gen stmt_print.expr in
      let gen = pop gen "rdi" in
      let output = gen.output ^ "    call dump\n" in
-     { gen with output = output } *)
+     { gen with output = output }
 
 let generate_program (program : Parser.node_prog_t) : string =
   let rec iter_prog_stmts (gen : gen_t) (lst : Parser.node_stmt_t list) : gen_t =
@@ -145,6 +145,7 @@ let generate_program (program : Parser.node_prog_t) : string =
   (* Obligatory exit for when the programmer forgets (>д<) *)
 
   let output = gen.output in
+  let output = output ^ "    ; Obligatory exit\n" in
   let output = output ^ "    mov rax, 60\n" in
   let output = output ^ "    mov rdi, 0\n" in
   let output = output ^ "    syscall" in

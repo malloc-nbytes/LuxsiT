@@ -18,6 +18,9 @@ src/bin/parser
 src/bin/gen
 src/bin/main
 
+out.asm
+out
+
 # ocamlbuild working directory
 _build/
 
