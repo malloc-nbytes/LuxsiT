@@ -1,50 +1,58 @@
 type node_stmt_t =
-  | NodeStmtExit of node_stmt_exit_t
+  | NodeStmtExit    of node_stmt_exit_t
   | NodeStmtVarDecl of node_stmt_var_decl_t
   | NodeStmtPrintln of node_stmt_println_t
 
 and node_term_t =
-  | NodeTermID of node_term_id_t
+  | NodeTermID     of node_term_id_t
   | NodeTermIntLit of node_term_intlit
 
 and node_expr_t =
   | NodeBinExpr of node_bin_expr_t
-  | NodeTerm of node_term_t
+  | NodeTerm    of node_term_t
 
 and node_bin_expr_t =
-  { lhs : node_expr_t 
+  { lhs : node_expr_t
   ; rhs : node_expr_t
-  ; op : string }
+  ; op  : string
+  }
 
 and node_prog_t =
-  { stmts : node_stmt_t list }
+  { stmts : node_stmt_t list
+  }
 
 and node_term_id_t =
-  { id : Token.token_t }
+  { id : Token.token_t
+  }
 
 and node_term_intlit =
-  { intlit : Token.token_t }
+  { intlit : Token.token_t
+  }
 
 and node_stmt_exit_t =
-  { expr : node_expr_t }
+  { expr : node_expr_t
+  }
 
 and node_stmt_var_decl_t =
-  { id : Token.token_t
-  ; expr : node_expr_t option
-  ; constant : bool }
+  { id       : Token.token_t
+  ; expr     : node_expr_t option
+  ; constant : bool
+  }
 
 and node_stmt_println_t =
-  { expr : node_expr_t }
+  { expr : node_expr_t
+  }
 
 type parser_t =
-  { tokens : Token.token_t list }
+  { tokens : Token.token_t list
+  }
 
 
 let parser_create tokens : parser_t =
   { tokens }
 
 
-let expect p expected_type : parser_t * Token.token_t =
+let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   match p.tokens with
   | [] -> failwith "no more tokens"
   | hd :: tl when hd.tokentype = expected_type -> { tokens = tl }, hd
@@ -53,7 +61,7 @@ let expect p expected_type : parser_t * Token.token_t =
      failwith "expected token"
 
 
-let eat p : parser_t * Token.token_t =
+let eat (p : parser_t) : parser_t * Token.token_t =
   match p.tokens with
   | [] ->
      let _ = Err.err "no tokens error" in
@@ -61,7 +69,7 @@ let eat p : parser_t * Token.token_t =
   | hd :: tl -> { tokens = tl }, hd
 
 
-let at p : Token.token_t =
+let at (p : parser_t) : Token.token_t =
   match p.tokens with
   | [] ->
      let _ = Err.err "no tokens error" in
@@ -115,9 +123,7 @@ and parse_expr (p : parser_t) : parser_t * node_expr_t =
   let p, expr = parse_add_expr p in
   p, expr
 
-(* cases: *)
-(* let id; *)
-(* let | const id = expr *)
+
 let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
   let p, t = eat p in
   let constant = t.tokentype = Token.Const in
@@ -140,7 +146,7 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtExit { expr }
   | t when t.tokentype = Token.Let || t.tokentype = Token.Const ->
-      parse_var_decl p
+     parse_var_decl p
   | t when t.tokentype = Token.Println ->
      let p, _ = eat p in
      let p, expr = parse_expr p in

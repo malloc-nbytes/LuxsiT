@@ -1,5 +1,6 @@
 type lexer_t =
-  { tokens : Token.token_t list }
+  { tokens : Token.token_t list
+  }
 
 let symbols : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 15
 

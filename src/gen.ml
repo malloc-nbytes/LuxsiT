@@ -1,15 +1,49 @@
 open Parser
 
 type var_t =
-  { stackloc : int }
+  { stackloc : int
+  }
 
+(* TODO: make `output` -> `section_text` *)
+(* TODO: add `section_text *)
+(* TODO: add `section_data *)
+(* TODO: add `section_bss*)
+(* TODO: add `section_rodata*)
+(*
+section .text
+  - Purpose: This section is used for code instructions. It contains the actual
+             executable machine code for your program.
+
+  - Permissions: Typically, this section is marked as read-only and execute-only,
+                 meaning you can't write to it, and it's meant for the CPU to execute
+                 instructions from.
+
+section .data
+  - Purpose: This section is used for defining initialized data variables.
+             These variables have values that are set at compile time.
+
+  - Permissions: This section is usually marked as read-write.
+
+section .bss
+  - Purpose: This section is used for defining uninitialized data variables.
+             These variables don't have an initial value; they are just allocated memory space.
+
+  - Permissions: Like the .data section, it's usually marked as read-write.
+
+section .rodata
+  - Purpose: This section is used for read-only data, typically constants and strings.
+
+  - Permissions: It is marked as read-only. *)
 type gen_t =
-  { output : string;
-    stackptr : int;
-    vars : (string, var_t) Hashtbl.t }
+  { output     : string
+  ; stackptr   : int
+  ; vars       : (string, var_t) Hashtbl.t
+  ; const_vars : (string, var_t) Hashtbl.t
+  }
 
 (* QAD solution for printing. *)
 (* TODO: remove later. *)
+(* label dump takes value in register rdi *)
 let asm_header =
   "section .text\n" ^
   "dump:\n" ^
@@ -43,26 +77,31 @@ let asm_header =
   "global _start\n" ^
   "_start:\n"
 
-let var_exists gen name : bool =
-  Hashtbl.mem gen.vars name
+let var_exists (gen : gen_t) (name : string) : bool =
+  Hashtbl.mem gen.vars name || Hashtbl.mem gen.const_vars name
 
-let get_var gen name : var_t option =
-  if var_exists gen name then
-    let var = Hashtbl.find gen.vars name in
-    Some var
+let get_var (gen : gen_t) (name : string) : var_t option =
+  if Hashtbl.mem gen.vars name then
+    Some (Hashtbl.find gen.vars name)
+  else if Hashtbl.mem gen.const_vars name then
+    Some (Hashtbl.find gen.const_vars name)
   else
     None
 
-let insert_var gen name : unit =
+let insert_var (gen : gen_t) (name : string) : unit =
   let v = { stackloc = gen.stackptr } in
   Hashtbl.add gen.vars name v
 
-let push gen register : gen_t =
+let insert_const_var (gen : gen_t) (name : string) : unit =
+  let v = { stackloc = gen.stackptr } in
+  Hashtbl.add gen.const_vars name v
+
+let push (gen : gen_t) (register : string) : gen_t =
   let output = gen.output in
   let output = output ^ "    push " ^ register ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr + 1 }
 
-let pop gen register : gen_t =
+let pop (gen : gen_t) (register : string) : gen_t =
   let output = gen.output in
   let output = output ^ "    pop " ^ register ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr - 1 }
@@ -88,47 +127,37 @@ let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
   match expr with
   | NodeTerm term -> gen_term gen term
   | NodeBinExpr bin_expr ->
-     (match bin_expr.op with
-      | "+" ->
-         let gen = gen_expr gen bin_expr.lhs in
-         let gen = gen_expr gen bin_expr.rhs in
-         let gen = pop gen "rdi" in
-         let gen = pop gen "rax" in
-         let output = gen.output in
-         let output = output ^ "    add rax, rdi\n" in
-         push { gen with output = output } "rax"
-      | "-" ->
-         let gen = gen_expr gen bin_expr.lhs in
-         let gen = gen_expr gen bin_expr.rhs in
-         let gen = pop gen "rdi" in
-         let gen = pop gen "rax" in
-         let output = gen.output in
-         let output = output ^ "    sub rax, rdi\n" in
-         push { gen with output = output } "rax"
-      | "*" ->
-         let gen = gen_expr gen bin_expr.lhs in
-         let gen = gen_expr gen bin_expr.rhs in
-         let gen = pop gen "rdi" in
-         let gen = pop gen "rax" in
-         let output = gen.output in
-         let output = output ^ "    imul rax, rdi\n" in
-         push { gen with output = output } "rax"
-      | "/" ->
-         let gen = gen_expr gen bin_expr.lhs in
-         let gen = gen_expr gen bin_expr.rhs in
-         let gen = pop gen "rdi" in
-         let gen = pop gen "rax" in
-         let output = gen.output in
-         let output = output ^ "    div rdi\n" in
-         push { gen with output = output } "rax"
-      | _ -> failwith "gen error: unknown binary operator")
+     let gen = gen_expr gen bin_expr.lhs in
+     let gen = gen_expr gen bin_expr.rhs in
+     let gen = pop gen "rdi" in
+     let gen = pop gen "rax" in
+     let output = gen.output in
+     match bin_expr.op with
+     | "+" ->
+        let output = output ^ "    add rax, rdi\n" in
+        push { gen with output = output } "rax"
+     | "-" ->
+        let output = output ^ "    sub rax, rdi\n" in
+        push { gen with output = output } "rax"
+     | "*" ->
+        let output = output ^ "    imul rax, rdi\n" in
+        push { gen with output = output } "rax"
+     | "/" ->
+        let output = output ^ "    div rdi\n" in
+        push { gen with output = output } "rax"
+     | _ ->
+        let _ = Err.err "gen error: unknown binary operator" in
+        failwith "gen error"
 
 let unwrap (a : 'a option) : 'a =
   match a with
   | Some a -> a
   | None -> failwith "gen error: unwrap failed"
 
-let generate_stmt gen stmt : gen_t =
+(* TODO: change how variables are accessed. *)
+(* We want to keep using the stack, however
+   constantly copying can get expensive. *)
+let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
   | NodeStmtExit stmt_exit ->
      let gen = gen_expr gen stmt_exit.expr in
@@ -137,16 +166,24 @@ let generate_stmt gen stmt : gen_t =
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
   | NodeStmtVarDecl stmt_var_decl ->
+     (* Variable already exists. *)
      if var_exists gen stmt_var_decl.id.data then
        let _ = Err.err ("ID " ^ stmt_var_decl.id.data ^ " is already defined") in
        failwith "gen error"
+
      else
-       let _ = insert_var gen stmt_var_decl.id.data in
+       (* Determine which hashtbl to put it in. *)
+       let _ = if stmt_var_decl.constant then insert_const_var gen stmt_var_decl.id.data
+               else insert_var gen stmt_var_decl.id.data in
+
+       (* Initialized variable. *)
        if stmt_var_decl.expr <> None then
-        let _ = if stmt_var_decl.constant then failwith "gen: constants not implemented" in
-        gen_expr gen @@ unwrap stmt_var_decl.expr
+         gen_expr gen (unwrap stmt_var_decl.expr)
+
+                  (* Uninitialized variable. *)
        else
-        failwith "undefined variables not implemented"
+         let _ = Err.err "undedfined variables not yet implemented" in
+         failwith "gen error"
   | NodeStmtPrintln stmt_print ->
      let gen = gen_expr gen stmt_print.expr in
      let gen = pop gen "rdi" in
@@ -160,9 +197,11 @@ let generate_program (program : node_prog_t) : string =
     | hd :: tl -> iter_prog_stmts (generate_stmt gen hd) tl
   in
 
-  let gen = { output = asm_header;
-              stackptr = 0;
-              vars = Hashtbl.create 20 } in
+  let gen = { output     = asm_header
+            ; stackptr   = 0
+            ; vars       = Hashtbl.create 20
+            ; const_vars = Hashtbl.create 20 
+            } in
 
   let gen = iter_prog_stmts gen program.stmts in
 

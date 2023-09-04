@@ -1,6 +1,6 @@
-let a = 1;
-let b = 2;
+const a = 10;
+const a = 4;
 
-println a + b;
+println a - 5;
 
 exit 0;
