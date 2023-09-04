@@ -15,6 +15,7 @@
   - [ ] add comments on all functions
 
 * [[/home/zdh/dev/luxsit/src/lexer.ml][lexer.ml]] [0%]
+  - [ ] rename =parse_code= $\rightarrow$ =lex_tokens=
   - [ ] make `/` its own type instead of =binop=
   - [ ] make `-` its own type instead of =binop=
   - [ ] add line number and column number when creating tokens.
@@ -26,7 +27,7 @@
   - [ ] add support for `-`
   - [ ] move all node types to a separate file named /ast.ml/
   - [ ] better error reporting
-  - [ ] create custom errors with an algebraic type
+  - [ ] create custom errors with an algebraic type; refer to *Other* for new file
   - [ ] rename the longer functions
   - [ ] add comments on all functions
 
@@ -34,6 +35,8 @@
   - [ ] find a solution to not have =asm_header=
 
 * Other [0%]
+  - [ ] create file =helper.ml= and put repeated functions in it i.e. =err=
+  - [ ] create file =err.ml= and put custom error types there
   - [ ] rename /luxsit/ $\rightarrow$ /LuxsiT/
   - [ ] update grammar to show parenthesized expressions
   - [ ] use `~` in /todo.org/ for links
