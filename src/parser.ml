@@ -1,61 +1,70 @@
 type node_stmt_t =
-  | NodeStmtExit of node_stmt_exit_t
-  | NodeStmtLet of node_stmt_let_t
+  | NodeStmtExit    of node_stmt_exit_t
+  | NodeStmtVarDecl of node_stmt_var_decl_t
   | NodeStmtPrintln of node_stmt_println_t
 
 and node_term_t =
-  | NodeTermID of node_term_id_t
+  | NodeTermID     of node_term_id_t
   | NodeTermIntLit of node_term_intlit
 
 and node_expr_t =
   | NodeBinExpr of node_bin_expr_t
-  | NodeTerm of node_term_t
+  | NodeTerm    of node_term_t
 
 and node_bin_expr_t =
-  { lhs : node_expr_t 
+  { lhs : node_expr_t
   ; rhs : node_expr_t
-  ; op : string }
+  ; op  : string
+  }
 
 and node_prog_t =
-  { stmts : node_stmt_t list }
+  { stmts : node_stmt_t list
+  }
 
 and node_term_id_t =
-  { id : Token.token_t }
+  { id : Token.token_t
+  }
 
 and node_term_intlit =
-  { intlit : Token.token_t }
+  { intlit : Token.token_t
+  }
 
 and node_stmt_exit_t =
-  { expr : node_expr_t }
+  { expr : node_expr_t
+  }
 
-and node_stmt_let_t =
-  { id : Token.token_t
-  ; expr : node_expr_t }
+and node_stmt_var_decl_t =
+  { id       : Token.token_t
+  ; expr     : node_expr_t option
+  ; constant : bool
+  }
 
 and node_stmt_println_t =
-  { expr : node_expr_t }
+  { expr : node_expr_t
+  }
 
 type parser_t =
-  { tokens : Token.token_t list }
+  { tokens : Token.token_t list
+  }
 
-let err (msg : string) : unit = print_endline msg
 
-let parser_create (tokens : Token.token_t list) : parser_t =
+let parser_create tokens : parser_t =
   { tokens }
+
 
 let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   match p.tokens with
   | [] -> failwith "no more tokens"
   | hd :: tl when hd.tokentype = expected_type -> { tokens = tl }, hd
   | hd :: _ ->
-     let _ = err ("expected token " ^ (Token.get_tokentype_as_str expected_type) ^ " but got " ^ hd.data) in 
+     let _ = Err.err ("expected token " ^ (Token.tokentype_tostr expected_type) ^ " but got " ^ hd.data) in 
      failwith "expected token"
 
 
 let eat (p : parser_t) : parser_t * Token.token_t =
   match p.tokens with
   | [] ->
-     let _ = err "no tokens error" in
+     let _ = Err.err "no tokens error" in
      failwith "parser error"
   | hd :: tl -> { tokens = tl }, hd
 
@@ -63,7 +72,7 @@ let eat (p : parser_t) : parser_t * Token.token_t =
 let at (p : parser_t) : Token.token_t =
   match p.tokens with
   | [] ->
-     let _ = err "no tokens error" in
+     let _ = Err.err "no tokens error" in
      failwith "parser error"
   | hd :: _ -> hd
 
@@ -82,38 +91,52 @@ let rec parse_primary_expr (p : parser_t) : parser_t * node_expr_t =
      let p, _ = expect p Token.RParen in
      p, expr
   | _ ->
-     let _ = err ("could not parse primary expression. unexpected token " ^ (at p).data) in 
+     let _ = Err.err ("could not parse primary expression. unexpected token " ^ (at p).data) in 
      failwith "unexpected token"
 
 
-and parse_multiplicitave_expr (p : parser_t) : parser_t * node_expr_t =
+and parse_mult_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_primary_expr p in
-  let rec parse_multiplicitave_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
+  let rec parse_mult_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Mult ->
+    | t when t.tokentype = Token.Asterisk || t.tokentype = Token.ForwardSlash->
        let p, t = eat p in
        let p, rhs = parse_primary_expr p in
-       parse_multiplicitave_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
+       parse_mult_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
     | _ -> p, lhs in
-  parse_multiplicitave_expr p lhs
+  parse_mult_expr p lhs
 
 
-and parse_additive_expr (p : parser_t) : parser_t * node_expr_t =
-  let p, lhs = parse_multiplicitave_expr p in
-  let rec parse_additive_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
+and parse_add_expr (p : parser_t) : parser_t * node_expr_t =
+  let p, lhs = parse_mult_expr p in
+  let rec parse_add_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Plus ->
+    | t when t.tokentype = Token.Plus || t.tokentype = Token.Hyphen->
        let p, t = eat p in
-       let p, rhs = parse_multiplicitave_expr p in
-       parse_additive_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
+       let p, rhs = parse_mult_expr p in
+       parse_add_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
     | _ -> p, lhs in
-  parse_additive_expr p lhs
+  parse_add_expr p lhs
 
 
 and parse_expr (p : parser_t) : parser_t * node_expr_t =
-  let p, expr = parse_additive_expr p in
+  let p, expr = parse_add_expr p in
   p, expr
 
+
+let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
+  let p, t = eat p in
+  let constant = t.tokentype = Token.Const in
+  let p, id = expect p Token.ID in
+  if (at p).tokentype = Token.SemiColon then
+    let _ = if constant then Err.err "constant must be initialized" in
+    let p, _ = eat p in
+    p, NodeStmtVarDecl { id; expr = None; constant }
+  else
+    let p, _ = expect p Token.Assignment in
+    let p, expr = parse_expr p in
+    let p, _ = expect p Token.SemiColon in
+    p, NodeStmtVarDecl { id; expr = Some expr; constant }
 
 let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
   match at p with
@@ -122,21 +145,16 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, expr = parse_expr p in
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtExit { expr }
-  | t when t.tokentype = Token.Let ->
-     let p, _ = eat p in
-     let p, id = expect p Token.ID in
-     let p, _ = expect p Token.Equals in
-     let p, expr = parse_expr p in
-     let p, _ = expect p Token.SemiColon in
-     p, NodeStmtLet { id; expr }
+  | t when t.tokentype = Token.Let || t.tokentype = Token.Const ->
+     parse_var_decl p
   | t when t.tokentype = Token.Println ->
      let p, _ = eat p in
      let p, expr = parse_expr p in
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtPrintln { expr }
   | _ ->
-     let _ = err ("unexpected token " ^ (at p).data) in
-     failwith "unexpected token"
+     let _ = Err.err ("unexpected token " ^ (at p).data) in
+     failwith "parser error"
 
 
 (* Entrypoint. *)

@@ -1,0 +1,43 @@
+#+AUTHOR: malloc-nbytes
+#+TITLE: Luxsit TODO
+
+/[[/home/zdh/dev/luxsit/resources/grammar.org][grammar]]/
+
+* [[/home/zdh/dev/luxsit/src/main.ml][main.ml]] [33%]
+  - [ ] add cli args and usage
+  - [ ] take in a src file instead of hard-coding the file
+  - [X] add comments on all functions
+
+* [[/home/zdh/dev/luxsit/src/token.ml][token.ml]] [100%]
+  - [X] remove =token_print= function
+  - [X] rename =get_tokentype_as_str= to something shorter and make it start with /token/
+  - [X] organize =get_tokentype_as_str=
+  - [X] add comments on all functions
+
+* [[/home/zdh/dev/luxsit/src/lexer.ml][lexer.ml]] [80%]
+  - [X] rename =parse_code= $\rightarrow$ =lex_tokens=
+  - [X] make `/` its own type instead of =binop=
+  - [X] make `-` its own type instead of =binop=
+  - [ ] add line number and column number when creating tokens.
+  - [X] add comments on all functions
+
+* [[/home/zdh/dev/luxsit/src/parser.ml][parser.ml]] [33%]
+  - [ ] implement =if then= statements
+  - [ ] implement =else if else= statements
+  - [X] add support for `-`
+  - [X] add support for `/`
+  - [X] move all node types to a separate file named /ast.ml/
+  - [ ] better error reporting
+  - [ ] rename the longer functions
+  - [ ] add comments on all functions
+
+* [[/home/dev/luxsit/src/gen.ml][gen.ml]] [0%]
+  - [ ] find a solution to not have =asm_header=
+
+* Other [50%]
+  - [X] clean up types in function definitions
+  - [X] create file =err.ml= and put repeated functions in it i.e. =err=
+  - [ ] create file =err.ml= and put custom error types there
+  - [X] rename /luxsit/ $\rightarrow$ /LuxsiT/
+  - [ ] update grammar to show parenthesized expressions
+  - [ ] use `~` in /todo.org/ for links
