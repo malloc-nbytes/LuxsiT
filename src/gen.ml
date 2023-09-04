@@ -10,7 +10,7 @@ let err (msg : string) : unit =
   Printf.printf "(ERR) %s\n" msg
 
 (* Header and procedures to print. *)
-(* let asm_header =
+let asm_header =
   "section .text\n" ^
   "dump:\n" ^
   "    mov     r8, -3689348814741910323\n" ^
@@ -41,7 +41,7 @@ let err (msg : string) : unit =
   "    add     rsp, 40\n" ^
   "    ret\n" ^
   "global _start\n" ^
-  "_start:\n" *)
+  "_start:\n"
 
 let var_exists (gen : gen_t) (name : string) : bool =
   Hashtbl.mem gen.vars name
@@ -67,13 +67,13 @@ let pop (gen : gen_t) (reg : string) : gen_t =
   let output = output ^ "    pop " ^ reg ^ "\n" in
   { gen with output = output; stackptr = gen.stackptr - 1 }
 
-(* let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
+let gen_term (gen : gen_t) (term : Parser.node_term_t) : gen_t =
   match term with
-  | Parser.NodeTermIntlit term_intlit ->
+  | Parser.NodeTermIntLit term_intlit ->
      let output = gen.output in
      let output = output ^ "    mov rax, " ^ term_intlit.intlit.data ^ "\n" in
      push ({ gen with output = output }) "rax"
-  | Parser.NodeTermId term_id ->
+  | Parser.NodeTermID term_id ->
      let var : var_t =
        match get_var gen term_id.id.data with
        | Some var -> var
@@ -84,14 +84,12 @@ let pop (gen : gen_t) (reg : string) : gen_t =
      let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
-  | _ -> 
-      let _ = err "gen_term: not implemented" in
-      failwith "gen error" *)
 
-(* let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
+let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
   match expr with
   | Parser.NodeTerm term -> gen_term gen term
-  | Parser.NodeBinaryExpr bin_expr ->
+  | _ -> failwith "binary unimplemented"
+  (* | Parser.NodeBinExpr bin_expr ->
      (match bin_expr with
       | Parser.NodeBinExprAdd add_expr ->
          let gen = gen_expr gen add_expr.lhs in (* gets put on top of stack *)
@@ -108,46 +106,42 @@ let pop (gen : gen_t) (reg : string) : gen_t =
          let output = gen.output ^ "    imul rax, rdi\n" in
          push ({ gen with output = output }) "rax") *)
 
-let generate_stmt (gen : gen_t) (stmt : Parser.stmt_t) : gen_t =
+let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
-  | Parser.Exit stmt_exit ->
-     let gen = gen_expr gen stmt_exit in
+  | Parser.NodeStmtExit stmt_exit ->
+     let gen = gen_expr gen stmt_exit.expr in
      let output = gen.output in
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
-  | Parser.Let stmt_let ->
+  (* | Parser.NodeStmtLet stmt_let ->
      if var_exists gen stmt_let.id.data then
        let _ = err ("ID " ^ stmt_let.id.data ^ " is already defined") in
        failwith "gen error"
      else
        let _ = insert_var gen stmt_let.id.data in
        gen_expr gen stmt_let.expr
-  | Parser.Println stmt_print ->
+  | Parser.NodeStmtPrintln stmt_print ->
      let gen = gen_expr gen stmt_print in
      let gen = pop gen "rdi" in
      let output = gen.output ^ "    call dump\n" in
-     { gen with output = output }
-  | _ ->
-    let _ = err "gen_stmt: not implemented" in
-    failwith "gen error"
+     { gen with output = output } *)
 
-let generate_program (program : Parser.program_t) : string =
-  let rec iter_prog_stmts (gen : gen_t) (lst : Parser.stmt_t list) : gen_t =
+let generate_program (program : Parser.node_prog_t) : string =
+  let rec iter_prog_stmts (gen : gen_t) (lst : Parser.node_stmt_t list) : gen_t =
     match lst with
     | [] -> gen
     | hd :: tl -> iter_prog_stmts (generate_stmt gen hd) tl
   in
 
-  let asm_header = "" in (* temp *)
-
   let gen = { output = asm_header;
               stackptr = 0;
               vars = Hashtbl.create 20 } in
 
-  let gen = iter_prog_stmts gen program.body in
+  let gen = iter_prog_stmts gen program.stmts in
 
   (* Obligatory exit for when the programmer forgets (>д<) *)
+
   let output = gen.output in
   let output = output ^ "    mov rax, 60\n" in
   let output = output ^ "    mov rdi, 0\n" in
