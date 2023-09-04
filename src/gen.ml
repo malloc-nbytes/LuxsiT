@@ -1,3 +1,5 @@
+open Ast
+
 type var_t =
   { stackloc : int }
 
@@ -5,9 +7,6 @@ type gen_t =
   { output : string;
     stackptr : int;
     vars : (string, var_t) Hashtbl.t }
-
-let err msg : unit =
-  Printf.printf "(ERR) %s\n" msg
 
 (* QAD solution for printing. *)
 (* TODO: remove later. *)
@@ -70,16 +69,16 @@ let pop gen register : gen_t =
 
 let gen_term gen term : gen_t =
   match term with
-  | Parser.NodeTermIntLit term_intlit ->
+  | NodeTermIntLit term_intlit ->
      let output = gen.output in
      let output = output ^ "    mov rax, " ^ term_intlit.intlit.data ^ "\n" in
      push ({ gen with output = output }) "rax"
-  | Parser.NodeTermID term_id ->
+  | NodeTermID term_id ->
      let var : var_t =
        (match get_var gen term_id.id.data with
         | Some var -> var
         | None ->
-           let _ = err ("undeclared ID " ^ term_id.id.data ^ "\n") in
+           let _ = Err.err ("undeclared ID " ^ term_id.id.data ^ "\n") in
            failwith "gen error") in
      let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
@@ -87,8 +86,8 @@ let gen_term gen term : gen_t =
 
 let rec gen_expr gen expr : gen_t =
   match expr with
-  | Parser.NodeTerm term -> gen_term gen term
-  | Parser.NodeBinExpr bin_expr ->
+  | NodeTerm term -> gen_term gen term
+  | NodeBinExpr bin_expr ->
      (match bin_expr.op with
       | "+" ->
          let gen = gen_expr gen bin_expr.lhs in
@@ -126,27 +125,27 @@ let rec gen_expr gen expr : gen_t =
 
 let generate_stmt gen stmt : gen_t =
   match stmt with
-  | Parser.NodeStmtExit stmt_exit ->
+  | NodeStmtExit stmt_exit ->
      let gen = gen_expr gen stmt_exit.expr in
      let output = gen.output in
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
-  | Parser.NodeStmtLet stmt_let ->
+  | NodeStmtLet stmt_let ->
      if var_exists gen stmt_let.id.data then
-       let _ = err ("ID " ^ stmt_let.id.data ^ " is already defined") in
+       let _ = Err.err ("ID " ^ stmt_let.id.data ^ " is already defined") in
        failwith "gen error"
      else
        let _ = insert_var gen stmt_let.id.data in
        gen_expr gen stmt_let.expr
-  | Parser.NodeStmtPrintln stmt_print ->
+  | NodeStmtPrintln stmt_print ->
      let gen = gen_expr gen stmt_print.expr in
      let gen = pop gen "rdi" in
      let output = gen.output ^ "    call dump\n" in
      { gen with output = output }
 
 let generate_program program : string =
-  let rec iter_prog_stmts (gen : gen_t) (lst : Parser.node_stmt_t list) : gen_t =
+  let rec iter_prog_stmts (gen : gen_t) (lst : node_stmt_t list) : gen_t =
     match lst with
     | [] -> gen
     | hd :: tl -> iter_prog_stmts (generate_stmt gen hd) tl
@@ -156,7 +155,7 @@ let generate_program program : string =
               stackptr = 0;
               vars = Hashtbl.create 20 } in
 
-  let gen = iter_prog_stmts gen program.Parser.stmts in
+  let gen = iter_prog_stmts gen program.stmts in
 
   (* Obligatory exit for when the programmer forgets (ノ-_-)ノ ~┻━┻ *)
 

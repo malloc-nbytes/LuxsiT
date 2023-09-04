@@ -21,12 +21,12 @@
   - [ ] add line number and column number when creating tokens.
   - [X] add comments on all functions
 
-* [[/home/zdh/dev/luxsit/src/parser.ml][parser.ml]] [22%]
+* [[/home/zdh/dev/luxsit/src/parser.ml][parser.ml]] [33%]
   - [ ] implement =if then= statements
   - [ ] implement =else if else= statements
   - [X] add support for `-`
   - [X] add support for `/`
-  - [ ] move all node types to a separate file named /ast.ml/
+  - [X] move all node types to a separate file named /ast.ml/
   - [ ] better error reporting
   - [ ] create custom errors with an algebraic type; refer to *Other* for new file
   - [ ] rename the longer functions
@@ -35,9 +35,9 @@
 * [[/home/dev/luxsit/src/gen.ml][gen.ml]] [0%]
   - [ ] find a solution to not have =asm_header=
 
-* Other [33%]
+* Other [50%]
   - [X] clean up types in function definitions
-  - [ ] create file =helper.ml= and put repeated functions in it i.e. =err=
+  - [X] create file =err.ml= and put repeated functions in it i.e. =err=
   - [ ] create file =err.ml= and put custom error types there
   - [X] rename /luxsit/ $\rightarrow$ /LuxsiT/
   - [ ] update grammar to show parenthesized expressions
