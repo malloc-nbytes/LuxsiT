@@ -98,6 +98,14 @@ let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
          let output = gen.output in
          let output = output ^ "    add rax, rdi\n" in
          push { gen with output = output } "rax"
+      | "-" ->
+         let gen = gen_expr gen bin_expr.lhs in
+         let gen = gen_expr gen bin_expr.rhs in
+         let gen = pop gen "rdi" in
+         let gen = pop gen "rax" in
+         let output = gen.output in
+         let output = output ^ "    sub rax, rdi\n" in
+         push { gen with output = output } "rax"
       | "*" ->
          let gen = gen_expr gen bin_expr.lhs in
          let gen = gen_expr gen bin_expr.rhs in
@@ -105,6 +113,14 @@ let rec gen_expr (gen : gen_t) (expr : Parser.node_expr_t) : gen_t =
          let gen = pop gen "rax" in
          let output = gen.output in
          let output = output ^ "    imul rax, rdi\n" in
+         push { gen with output = output } "rax"
+      | "/" ->
+         let gen = gen_expr gen bin_expr.lhs in
+         let gen = gen_expr gen bin_expr.rhs in
+         let gen = pop gen "rdi" in
+         let gen = pop gen "rax" in
+         let output = gen.output in
+         let output = output ^ "    div rdi\n" in
          push { gen with output = output } "rax"
       | _ -> failwith "gen error: unknown binary operator")
 

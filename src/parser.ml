@@ -48,7 +48,7 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
   | [] -> failwith "no more tokens"
   | hd :: tl when hd.tokentype = expected_type -> { tokens = tl }, hd
   | hd :: _ ->
-     let _ = err ("expected token " ^ (Token.get_tokentype_as_str expected_type) ^ " but got " ^ hd.data) in 
+     let _ = err ("expected token " ^ (Token.tokentype_tostr expected_type) ^ " but got " ^ hd.data) in 
      failwith "expected token"
 
 
@@ -90,7 +90,7 @@ and parse_multiplicitave_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_primary_expr p in
   let rec parse_multiplicitave_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Mult ->
+    | t when t.tokentype = Token.Asterisk || t.tokentype = Token.ForwardSlash->
        let p, t = eat p in
        let p, rhs = parse_primary_expr p in
        parse_multiplicitave_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
@@ -102,7 +102,7 @@ and parse_additive_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_multiplicitave_expr p in
   let rec parse_additive_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Plus ->
+    | t when t.tokentype = Token.Plus || t.tokentype = Token.Hyphen->
        let p, t = eat p in
        let p, rhs = parse_multiplicitave_expr p in
        parse_additive_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
