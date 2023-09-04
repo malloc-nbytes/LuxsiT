@@ -1,6 +1,7 @@
 type node_stmt_t =
   | NodeStmtExit of node_stmt_exit_t
-  (* TODO: Let, println ... *)
+  | NodeStmtLet of node_stmt_let_t
+  (* TODO: println ... *)
 
 and node_term_t =
   | NodeTermID of node_term_id_t
@@ -11,8 +12,8 @@ and node_expr_t =
   | NodeTerm of node_term_t
 
 and node_bin_expr_t =
-  { left : node_expr_t 
-  ; right : node_expr_t
+  { lhs : node_expr_t 
+  ; rhs : node_expr_t
   ; op : string }
 
 and node_prog_t =
@@ -26,6 +27,10 @@ and node_term_intlit =
 
 and node_stmt_exit_t =
   { expr : node_expr_t }
+
+and node_stmt_let_t =
+  { id : Token.token_t
+  ; expr : node_expr_t }
 
 type parser_t =
   { tokens : Token.token_t list }
@@ -85,7 +90,7 @@ and parse_multiplicitave_expr (p : parser_t) : parser_t * node_expr_t =
     | t when t.tokentype = Token.Mult ->
       let p, t = eat p in
       let p, rhs = parse_primary_expr p in
-      parse_multiplicitave_expr p (NodeBinExpr { left = lhs; right = rhs; op = t.data })
+      parse_multiplicitave_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
     | _ -> p, lhs in
   parse_multiplicitave_expr p lhs
 
@@ -97,7 +102,7 @@ and parse_additive_expr (p : parser_t) : parser_t * node_expr_t =
     | t when t.tokentype = Token.Plus ->
       let p, t = eat p in
       let p, rhs = parse_multiplicitave_expr p in
-      parse_additive_expr p (NodeBinExpr { left = lhs; right = rhs; op = t.data })
+      parse_additive_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
     | _ -> p, lhs in
   parse_additive_expr p lhs
 
@@ -114,6 +119,13 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
     let p, expr = parse_expr p in
     let p, _ = expect p Token.SemiColon in
     p, NodeStmtExit { expr }
+  | t when t.tokentype = Token.Let ->
+    let p, _ = eat p in
+    let p, id = expect p Token.ID in
+    let p, _ = expect p Token.Equals in
+    let p, expr = parse_expr p in
+    let p, _ = expect p Token.SemiColon in
+    p, NodeStmtLet { id; expr }
   | _ ->
     let _ = err ("unexpected token " ^ (at p).data) in
     failwith "unexpected token"
