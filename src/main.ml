@@ -25,8 +25,8 @@ let perform_cmd (filepath : string) (_cmd : cmd) : unit =
   let exit_code = Sys.command _cmd in
   (Printf.printf "(INFO) %s exited with code %d\n" action exit_code)
 
-let () =
-  let src = read_input_file input_filepath in
+let () = ()
+  (* let src = read_input_file input_filepath in
   let lexer = Lexer.parse_code src in
   (* Lexer.lexer_dump lexer; *)
   let parse = Parser.parser_create lexer.tokens in
@@ -35,4 +35,4 @@ let () =
 
   let _ = write_to_file output_filepath output in
   let _ = perform_cmd output_filepath Assemble in
-  perform_cmd output_filepath Link
+  perform_cmd output_filepath Link *)
