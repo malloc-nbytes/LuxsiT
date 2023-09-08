@@ -80,10 +80,25 @@ let asm_header =
 let var_exists (gen : gen_t) (name : string) : bool =
   Hashtbl.mem gen.vars name || Hashtbl.mem gen.const_vars name
 
+let const_var_exists (gen : gen_t) (name : string) : bool =
+  Hashtbl.mem gen.const_vars name
+
 let get_var (gen : gen_t) (name : string) : var_t option =
   if Hashtbl.mem gen.vars name then
     Some (Hashtbl.find gen.vars name)
   else if Hashtbl.mem gen.const_vars name then
+    Some (Hashtbl.find gen.const_vars name)
+  else
+    None
+
+let get_mut_var (gen : gen_t) (name : string) : var_t option =
+  if Hashtbl.mem gen.vars name then
+    Some (Hashtbl.find gen.vars name)
+  else
+    None
+
+let get_const_var (gen : gen_t) (name : string) : var_t option =
+  if Hashtbl.mem gen.const_vars name then
     Some (Hashtbl.find gen.const_vars name)
   else
     None
@@ -193,17 +208,21 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
-    | NodeStmtMutateVar stmt_mutate_var ->
-     let gen = gen_expr gen stmt_mutate_var.expr in
-      let gen = pop gen "rdi" in
-      let var =
-        (match get_var gen stmt_mutate_var.id.data with
+  | NodeStmtMutateVar stmt_mutate_var ->
+      let _ = if const_var_exists gen stmt_mutate_var.id.data then
+                let _ = Err.err ("cannot mutate constant variable " ^ stmt_mutate_var.id.data) in
+                failwith "gen error" in
+      let var : var_t =
+        (match get_mut_var gen stmt_mutate_var.id.data with
          | Some var -> var
          | None ->
             let _ = Err.err ("undeclared ID " ^ stmt_mutate_var.id.data ^ "\n") in
             failwith "gen error") in
+      let gen = gen_expr gen stmt_mutate_var.expr in
+      let gen = pop gen "rdi" in
       let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
-      let output = gen.output ^ "    mov QWORD [rsp + " ^ offset ^ "], rdi\n" in
+      let output = gen.output in
+      let output = output ^ "    mov QWORD [rsp + " ^ offset ^ "], rdi\n" in
       { gen with output = output }
   | NodeStmtVarDecl stmt_var_decl ->
      (* Variable already exists. *)

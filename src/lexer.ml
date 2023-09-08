@@ -162,6 +162,6 @@ let lex_tokens src : lexer_t =
 (* Print everything in the lexer. Used for debugging. *)
 let lexer_dump lexer : unit =
   List.iter (fun token ->
-      Printf.printf "%s\n"
+      Printf.printf "[Lexer] %s\n"
         (Token.tokentype_tostr token.Token.tokentype)
     ) lexer.tokens
