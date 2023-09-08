@@ -138,6 +138,8 @@ let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
     let p, _ = expect p Token.SemiColon in
     p, NodeStmtVarDecl { id; expr = Some expr; constant }
 
+
+(* proc testfunc x: i32 -> y: i32 :: i32 = *)
 let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
   match at p with
   | t when t.tokentype = Token.Exit ->
