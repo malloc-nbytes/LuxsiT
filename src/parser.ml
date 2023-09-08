@@ -2,6 +2,7 @@ type node_stmt_t =
   | NodeStmtExit    of node_stmt_exit_t
   | NodeStmtVarDecl of node_stmt_var_decl_t
   | NodeStmtPrintln of node_stmt_println_t
+  | NodeStmtMutate  of node_stmt_mutate_t
 
 and node_term_t =
   | NodeTermID     of node_term_id_t
@@ -23,6 +24,11 @@ and node_prog_t =
 
 and node_term_id_t =
   { id : Token.token_t
+  }
+
+and node_stmt_mutate_t =
+  { id   : Token.token_t
+  ; expr : node_expr_t
   }
 
 and node_term_intlit =
@@ -47,10 +53,8 @@ type parser_t =
   { tokens : Token.token_t list
   }
 
-
 let parser_create tokens : parser_t =
   { tokens }
-
 
 let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token.token_t =
   match p.tokens with
@@ -60,7 +64,6 @@ let expect (p : parser_t) (expected_type : Token.tokentype_t) : parser_t * Token
      let _ = Err.err ("expected token " ^ (Token.tokentype_tostr expected_type) ^ " but got " ^ hd.data) in 
      failwith "expected token"
 
-
 let eat (p : parser_t) : parser_t * Token.token_t =
   match p.tokens with
   | [] ->
@@ -68,14 +71,12 @@ let eat (p : parser_t) : parser_t * Token.token_t =
      failwith "parser error"
   | hd :: tl -> { tokens = tl }, hd
 
-
 let at (p : parser_t) : Token.token_t =
   match p.tokens with
   | [] ->
      let _ = Err.err "no tokens error" in
      failwith "parser error"
   | hd :: _ -> hd
-
 
 let rec parse_primary_expr (p : parser_t) : parser_t * node_expr_t =
   match at p with
@@ -116,7 +117,6 @@ and parse_mult_expr (p : parser_t) : parser_t * node_expr_t =
     | _ -> p, lhs in
   parse_mult_expr p lhs
 
-
 and parse_add_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_mult_expr p in
   let rec parse_add_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
@@ -128,11 +128,9 @@ and parse_add_expr (p : parser_t) : parser_t * node_expr_t =
     | _ -> p, lhs in
   parse_add_expr p lhs
 
-
 and parse_expr (p : parser_t) : parser_t * node_expr_t =
   let p, expr = parse_add_expr p in
   p, expr
-
 
 let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
   let p, t = eat p in
@@ -147,7 +145,6 @@ let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
     let p, expr = parse_expr p in
     let p, _ = expect p Token.SemiColon in
     p, NodeStmtVarDecl { id; expr = Some expr; constant }
-
 
 (* proc testfunc x: i32 -> y: i32 :: i32 = *)
 let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
@@ -164,10 +161,15 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, expr = parse_expr p in
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtPrintln { expr }
+  | t when t.tokentype = Token.ID ->
+      let p, id = eat p in
+      let p, _ = expect p Token.Assignment in
+      let p, expr = parse_expr p in
+      let p, _ = expect p Token.SemiColon in
+      p, NodeStmtMutate { id; expr }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
      failwith "parser error"
-
 
 (* Entrypoint. *)
 let parse_program (tokens : Token.token_t list) : node_prog_t =
