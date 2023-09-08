@@ -2,7 +2,7 @@ type node_stmt_t =
   | NodeStmtExit    of node_stmt_exit_t
   | NodeStmtVarDecl of node_stmt_var_decl_t
   | NodeStmtPrintln of node_stmt_println_t
-  | NodeStmtMutate  of node_stmt_mutate_t
+  | NodeStmtMutateVar  of node_stmt_mutate_var_t
 
 and node_term_t =
   | NodeTermID     of node_term_id_t
@@ -26,7 +26,7 @@ and node_term_id_t =
   { id : Token.token_t
   }
 
-and node_stmt_mutate_t =
+and node_stmt_mutate_var_t =
   { id   : Token.token_t
   ; expr : node_expr_t
   }
@@ -166,7 +166,7 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
       let p, _ = expect p Token.Assignment in
       let p, expr = parse_expr p in
       let p, _ = expect p Token.SemiColon in
-      p, NodeStmtMutate { id; expr }
+      p, NodeStmtMutateVar { id; expr }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
      failwith "parser error"

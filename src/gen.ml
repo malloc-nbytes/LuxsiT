@@ -193,14 +193,14 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
-    | NodeStmtMutate stmt_mutate ->
-     let gen = gen_expr gen stmt_mutate.expr in
+    | NodeStmtMutateVar stmt_mutate_var ->
+     let gen = gen_expr gen stmt_mutate_var.expr in
       let gen = pop gen "rdi" in
       let var =
-        (match get_var gen stmt_mutate.id.data with
+        (match get_var gen stmt_mutate_var.id.data with
          | Some var -> var
          | None ->
-            let _ = Err.err ("undeclared ID " ^ stmt_mutate.id.data ^ "\n") in
+            let _ = Err.err ("undeclared ID " ^ stmt_mutate_var.id.data ^ "\n") in
             failwith "gen error") in
       let offset = string_of_int ((gen.stackptr - var.stackloc - 1) * 8) in
       let output = gen.output ^ "    mov QWORD [rsp + " ^ offset ^ "], rdi\n" in
