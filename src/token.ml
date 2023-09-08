@@ -35,6 +35,7 @@ type tokentype_t =
   | Hyphen
   | ForwardSlash
   | Asterisk
+  | Bang
 
   (* Other *)
   | ID
@@ -94,6 +95,7 @@ let tokentype_tostr tokentype : string =
   | Assignment -> "`=`"
   | Equality -> "`==`"
   | Inequality -> "`!=`"
+  | Bang -> "`!`"
 
   (* Other *)
   | ID -> "`ID`"

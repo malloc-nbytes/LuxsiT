@@ -94,14 +94,24 @@ let rec parse_primary_expr (p : parser_t) : parser_t * node_expr_t =
      let _ = Err.err ("could not parse primary expression. unexpected token " ^ (at p).data) in 
      failwith "unexpected token"
 
+and parse_equality_expr (p : parser_t) : parser_t * node_expr_t =
+  let p, lhs = parse_primary_expr p in
+  let rec parse_equality_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
+    match at p with
+    | t when t.tokentype = Token.Equality || t.tokentype = Token.Inequality ->
+       let p, t = eat p in
+       let p, rhs = parse_primary_expr p in
+       parse_equality_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
+    | _ -> p, lhs in
+  parse_equality_expr p lhs
 
 and parse_mult_expr (p : parser_t) : parser_t * node_expr_t =
-  let p, lhs = parse_primary_expr p in
+  let p, lhs = parse_equality_expr p in
   let rec parse_mult_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
     | t when t.tokentype = Token.Asterisk || t.tokentype = Token.ForwardSlash->
        let p, t = eat p in
-       let p, rhs = parse_primary_expr p in
+       let p, rhs = parse_equality_expr p in
        parse_mult_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
     | _ -> p, lhs in
   parse_mult_expr p lhs

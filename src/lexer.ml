@@ -120,9 +120,14 @@ let lex_tokens src : lexer_t =
             else if hd = '=' then
               match peek tl 0 with
               | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "==" Token.Equality])
-              | Some k when k = '!' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "!=" Token.Inequality])
               | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Assignment])
               | None -> failwith "Lexer ERR: found `None` when parsing `=`"
+
+            else if hd = '!' then
+              match peek tl 0 with
+              | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "!=" Token.Inequality])
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Bang])
+              | None -> failwith "Lexer ERR: found `None` when parsing `!`"
 
             else if hd = '\'' then (* Character literal token *)
               let charlit, rest = consume_while tl (fun c -> c <> '\'') in

@@ -127,25 +127,53 @@ let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
   match expr with
   | NodeTerm term -> gen_term gen term
   | NodeBinExpr bin_expr ->
-     let gen = gen_expr gen bin_expr.lhs in
-     let gen = gen_expr gen bin_expr.rhs in
-     let gen = pop gen "rdi" in
-     let gen = pop gen "rax" in
-     let output = gen.output in
-     match bin_expr.op with
-     | "+" ->
+      let gen = gen_expr gen bin_expr.lhs in
+      let gen = gen_expr gen bin_expr.rhs in
+      let gen = pop gen "rdi" in
+      let gen = pop gen "rax" in
+      let output = gen.output in
+      match bin_expr.op with
+      | "+" ->
         let output = output ^ "    add rax, rdi\n" in
         push { gen with output = output } "rax"
-     | "-" ->
+      | "-" ->
         let output = output ^ "    sub rax, rdi\n" in
         push { gen with output = output } "rax"
-     | "*" ->
+      | "*" ->
         let output = output ^ "    imul rax, rdi\n" in
         push { gen with output = output } "rax"
-     | "/" ->
+      | "/" ->
         let output = output ^ "    div rdi\n" in
         push { gen with output = output } "rax"
-     | _ ->
+      | "==" ->
+        let label_equal = "eq_" ^ string_of_int (gen.stackptr) in
+        let label_not_equal = "neq_" ^ string_of_int (gen.stackptr) in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    je " ^ label_equal ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_not_equal ^ "\n" ^
+          label_equal ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_not_equal ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | "!=" ->
+        let label_not_equal = "neq_" ^ string_of_int (gen.stackptr) in
+        let label_equal = "eq_" ^ string_of_int (gen.stackptr) in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    jne " ^ label_not_equal ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_equal ^ "\n" ^
+          label_not_equal ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_equal ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | _ ->
         let _ = Err.err "gen error: unknown binary operator" in
         failwith "gen error"
 
