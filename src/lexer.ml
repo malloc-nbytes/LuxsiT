@@ -10,12 +10,11 @@ let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 20
 let populate_symbols () : unit =
   let _ = Hashtbl.add symbols '(' Token.LParen in
   let _ = Hashtbl.add symbols ')' Token.RParen in
-  let _ = Hashtbl.add symbols ':' Token.Colon in
   let _ = Hashtbl.add symbols ';' Token.SemiColon in
   let _ = Hashtbl.add symbols ',' Token.Comma in
   let _ = Hashtbl.add symbols '+' Token.Plus in
   let _ = Hashtbl.add symbols '*' Token.Asterisk in
-  let _ = Hashtbl.add symbols '-' Token.Hyphen in
+  (* let _ = Hashtbl.add symbols '-' Token.Hyphen in *)
   let _ = Hashtbl.add symbols '/' Token.ForwardSlash in
   let _ = Hashtbl.add symbols '<' Token.LessThan in
   let _ = Hashtbl.add symbols '>' Token.GreaterThan in
@@ -121,6 +120,7 @@ let lex_tokens src : lexer_t =
             else if hd = '=' then
               match peek tl 0 with
               | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "==" Token.Equality])
+              | Some k when k = '!' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "!=" Token.Inequality])
               | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Assignment])
               | None -> failwith "Lexer ERR: found `None` when parsing `=`"
 
@@ -133,6 +133,12 @@ let lex_tokens src : lexer_t =
               let str, rest = consume_while tl (fun c -> c <> '"') in
               (* (List.tl rest) to consume extra quote *)
               lex_tokens' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
+
+            else if hd = ':' then (* Colon or DoubleColon `::` token. *)
+              match peek tl 0 with
+              | Some k when k = ':' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "::" Token.DoubleColon])
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.Colon])
+              | None -> failwith "Lexer ERR: found `None` when parsing `:`"
 
             else if hd = '-' then (* Minus or right arrow `->` token. *)
               match peek tl 0 with

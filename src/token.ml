@@ -24,11 +24,13 @@ type tokentype_t =
   | LessThan
   | Comma
   | Colon
+  | DoubleColon
   | SemiColon
   | LParen
   | RParen
   | Assignment
   | Equality
+  | Inequality
   | Plus
   | Hyphen
   | ForwardSlash
@@ -77,6 +79,7 @@ let tokentype_tostr tokentype : string =
 
   (* Symbols *)
   | Colon -> "`:`"
+  | DoubleColon -> "`::`"
   | SemiColon -> "`;`"
   | GreaterThan -> "`>`"
   | LessThan -> "`<`"
@@ -90,6 +93,7 @@ let tokentype_tostr tokentype : string =
   | Asterisk -> "`*`"
   | Assignment -> "`=`"
   | Equality -> "`==`"
+  | Inequality -> "`!=`"
 
   (* Other *)
   | ID -> "`ID`"
