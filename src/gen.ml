@@ -200,7 +200,7 @@ let unwrap (a : 'a option) : 'a =
 (* TODO: change how variables are accessed. *)
 (* We want to keep using the stack, however
    constantly copying can get expensive. *)
-let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
+let rec generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
   match stmt with
   | NodeStmtExit stmt_exit ->
      let gen = gen_expr gen stmt_exit.expr in
@@ -208,6 +208,36 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let output = output ^ "    mov rax, 60\n" in
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
+  | NodeStmtIf node_stmt_if ->
+    let true_branch_label = "if_true_" ^ string_of_int gen.stackptr in
+    let end_label = "if_end_" ^ string_of_int gen.stackptr in
+  
+    (* Generate code for the condition expression *)
+    let gen = gen_expr gen node_stmt_if.expr in
+    let gen = pop gen "rdi" in
+  
+    (* Compare the result with zero and jump to the true branch if true *)
+    let output =
+      gen.output ^
+      "    cmp rdi, 0\n" ^
+      "    je " ^ end_label ^ "\n" ^
+      "    jmp " ^ true_branch_label ^ "\n" ^
+      true_branch_label ^ ":\n"
+    in
+  
+    let gen = { gen with output = output } in
+  
+    (* Generate code for the true branch *)
+    let gen = iter_prog_stmts gen node_stmt_if.stmts in
+  
+    (* Unconditional jump to the end of the if statement *)
+    let output = gen.output ^ "    jmp " ^ end_label ^ "\n" in
+    let gen = { gen with output = output } in
+  
+    (* Generate code for the false branch (if it exists) *)
+    let output = gen.output ^ end_label ^ ":\n" in
+    { gen with output = output }
+    
   | NodeStmtMutateVar stmt_mutate_var ->
       let _ = if const_var_exists gen stmt_mutate_var.id.data then
                 let _ = Err.err ("cannot mutate constant variable " ^ stmt_mutate_var.id.data) in
@@ -249,13 +279,12 @@ let generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let output = gen.output ^ "    call dump\n" in
      { gen with output = output }
 
-let generate_program (program : node_prog_t) : string =
-  let rec iter_prog_stmts (gen : gen_t) (lst : node_stmt_t list) : gen_t =
-    match lst with
-    | [] -> gen
-    | hd :: tl -> iter_prog_stmts (generate_stmt gen hd) tl
-  in
+and iter_prog_stmts (gen : gen_t) (lst : node_stmt_t list) : gen_t =
+  match lst with
+  | [] -> gen
+  | hd :: tl -> iter_prog_stmts (generate_stmt gen hd) tl
 
+let generate_program (program : node_prog_t) : string =
   let gen = { output     = asm_header
             ; stackptr   = 0
             ; vars       = Hashtbl.create 20
