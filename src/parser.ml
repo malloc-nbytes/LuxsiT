@@ -1,8 +1,9 @@
 type node_stmt_t =
-  | NodeStmtExit    of node_stmt_exit_t
-  | NodeStmtVarDecl of node_stmt_var_decl_t
-  | NodeStmtPrintln of node_stmt_println_t
-  | NodeStmtMutateVar  of node_stmt_mutate_var_t
+  | NodeStmtExit      of node_stmt_exit_t
+  | NodeStmtVarDecl   of node_stmt_var_decl_t
+  | NodeStmtPrintln   of node_stmt_println_t
+  | NodeStmtMutateVar of node_stmt_mutate_var_t
+  | NodeStmtIf        of node_if_t
 
 and node_term_t =
   | NodeTermID     of node_term_id_t
@@ -16,6 +17,11 @@ and node_bin_expr_t =
   { lhs : node_expr_t
   ; rhs : node_expr_t
   ; op  : string
+  }
+
+and node_if_t =
+  { expr  : node_expr_t
+  ; stmts : node_stmt_t list
   }
 
 and node_prog_t =
@@ -146,8 +152,15 @@ let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
     let p, _ = expect p Token.SemiColon in
     p, NodeStmtVarDecl { id; expr = Some expr; constant }
 
-(* proc testfunc x: i32 -> y: i32 :: i32 = *)
-let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
+let rec parse_stmts (p : parser_t) : parser_t * node_stmt_t list =
+  match at p with
+  | t when t.tokentype = Token.End -> p, []
+  | _ ->
+     let p, stmt = parse_stmt p in
+     let p, stmts = parse_stmts p in
+     p, stmt :: stmts
+
+and parse_stmt (p : parser_t) : parser_t * node_stmt_t =
   match at p with
   | t when t.tokentype = Token.Exit ->
      let p, _ = eat p in
@@ -167,6 +180,13 @@ let parse_stmt (p : parser_t) : parser_t * node_stmt_t =
       let p, expr = parse_expr p in
       let p, _ = expect p Token.SemiColon in
       p, NodeStmtMutateVar { id; expr }
+  | t when t.tokentype = Token.If ->
+      let p, _ = eat p in
+      let p, expr = parse_expr p in
+      let p, _ = expect p Token.Then in
+      let p, stmts = parse_stmts p in
+      let p, _ = expect p Token.End in
+      p, NodeStmtIf { expr; stmts }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
      failwith "parser error"

@@ -21,12 +21,12 @@ let write_to_file filepath asm : unit =
 
 let assemble filepath : unit =
   let exit_code = Sys.command assemble_cmd in
-  Printf.printf "(INFO) Assembler exited with code %d\n" exit_code
+  Printf.printf "[LuxsiT] Assembler exited with code %d\n" exit_code
 
 
 let link filepath : unit =
   let exit_code = Sys.command link_cmd in
-  Printf.printf "(INFO) Linker exited with code %d\n" exit_code
+  Printf.printf "[LuxsiT] Linker exited with code %d\n" exit_code
 
 
 let main () =
