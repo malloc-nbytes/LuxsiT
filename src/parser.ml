@@ -105,7 +105,7 @@ and parse_equality_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_primary_expr p in
   let rec parse_equality_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Equality || t.tokentype = Token.Inequality ->
+    | t when t.tokentype = Token.Equality || t.tokentype = Token.Inequality || t.tokentype = Token.GreaterThan || t.tokentype = Token.LessThan || t.tokentype = Token.GreaterThanEqual || t.tokentype = Token.LessThanEqual ->
        let p, t = eat p in
        let p, rhs = parse_primary_expr p in
        parse_equality_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
@@ -116,7 +116,7 @@ and parse_mult_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_equality_expr p in
   let rec parse_mult_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Asterisk || t.tokentype = Token.ForwardSlash->
+    | t when t.tokentype = Token.Asterisk || t.tokentype = Token.ForwardSlash ->
        let p, t = eat p in
        let p, rhs = parse_equality_expr p in
        parse_mult_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })
@@ -127,7 +127,7 @@ and parse_add_expr (p : parser_t) : parser_t * node_expr_t =
   let p, lhs = parse_mult_expr p in
   let rec parse_add_expr (p : parser_t) (lhs : node_expr_t) : parser_t * node_expr_t =
     match at p with
-    | t when t.tokentype = Token.Plus || t.tokentype = Token.Hyphen->
+    | t when t.tokentype = Token.Plus || t.tokentype = Token.Hyphen ->
        let p, t = eat p in
        let p, rhs = parse_mult_expr p in
        parse_add_expr p (NodeBinExpr { lhs = lhs; rhs = rhs; op = t.data })

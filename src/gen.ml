@@ -41,6 +41,8 @@ type gen_t =
   ; const_vars : (string, var_t) Hashtbl.t
   }
 
+let counter : int ref = ref 0
+
 (* QAD solution for printing. *)
 (* TODO: remove later. *)
 (* label dump takes value in register rdi *)
@@ -138,6 +140,7 @@ let gen_term (gen : gen_t) (term : node_term_t) : gen_t =
      let output = gen.output ^ "    mov rax, QWORD [rsp + " ^ offset ^ "]\n" in
      push { gen with output = output } "rax"
 
+(* TODO: refactor *)
 let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
   match expr with
   | NodeTerm term -> gen_term gen term
@@ -161,8 +164,9 @@ let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
         let output = output ^ "    div rdi\n" in
         push { gen with output = output } "rax"
       | "==" ->
-        let label_equal = "eq_" ^ string_of_int (gen.stackptr) in
-        let label_not_equal = "neq_" ^ string_of_int (gen.stackptr) in
+        let label_equal = "eq_" ^ string_of_int (!counter) in
+        let label_not_equal = "neq_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
         let output =
           output ^
           "    cmp rax, rdi\n" ^
@@ -175,8 +179,9 @@ let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
         in
         push { gen with output = output } "rax"
       | "!=" ->
-        let label_not_equal = "neq_" ^ string_of_int (gen.stackptr) in
-        let label_equal = "eq_" ^ string_of_int (gen.stackptr) in
+        let label_not_equal = "neq_" ^ string_of_int (!counter) in
+        let label_equal = "eq_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
         let output =
           output ^
           "    cmp rax, rdi\n" ^
@@ -186,6 +191,66 @@ let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
           label_not_equal ^ ":\n" ^
           "    mov rax, 1\n" ^
           label_equal ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | "<" ->
+        let label_less = "less_" ^ string_of_int (!counter) in
+        let label_not_less = "not_less_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    jl " ^ label_less ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_not_less ^ "\n" ^
+          label_less ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_not_less ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | ">" ->
+        let label_greater = "greater_" ^ string_of_int (!counter) in
+        let label_not_greater = "not_greater_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    jg " ^ label_greater ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_not_greater ^ "\n" ^
+          label_greater ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_not_greater ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | "<=" ->
+        let label_less_equal = "less_equal_" ^ string_of_int (!counter) in
+        let label_not_less_equal = "not_less_equal_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    jle " ^ label_less_equal ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_not_less_equal ^ "\n" ^
+          label_less_equal ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_not_less_equal ^ ":\n"
+        in
+        push { gen with output = output } "rax"
+      | ">=" ->
+        let label_greater_equal = "greater_equal_" ^ string_of_int (!counter) in
+        let label_not_greater_equal = "not_greater_equal_" ^ string_of_int (!counter) in
+        let _ = counter := !counter + 1 in
+        let output =
+          output ^
+          "    cmp rax, rdi\n" ^
+          "    jge " ^ label_greater_equal ^ "\n" ^
+          "    mov rax, 0\n" ^
+          "    jmp " ^ label_not_greater_equal ^ "\n" ^
+          label_greater_equal ^ ":\n" ^
+          "    mov rax, 1\n" ^
+          label_not_greater_equal ^ ":\n"
         in
         push { gen with output = output } "rax"
       | _ ->
@@ -209,8 +274,9 @@ let rec generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
   | NodeStmtIf node_stmt_if ->
-    let true_branch_label = "if_true_" ^ string_of_int gen.stackptr in
-    let end_label = "if_end_" ^ string_of_int gen.stackptr in
+    let true_branch_label = "if_true_" ^ string_of_int !counter in
+    let end_label = "if_end_" ^ string_of_int !counter in
+    let _ = counter := !counter + 1 in
   
     (* Generate code for the condition expression *)
     let gen = gen_expr gen node_stmt_if.expr in

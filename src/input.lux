@@ -1,11 +1,10 @@
 let x = 1;
 let y = 2;
 
-let gt = x > y;
-
-let lt = x < y;
-
-println gt;
-println lt;
+if x < y then
+  if x != y then
+    println 1;
+  end
+end
 
 exit 0;

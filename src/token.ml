@@ -98,6 +98,8 @@ let tokentype_tostr tokentype : string =
   | Equality -> "`==`"
   | Inequality -> "`!=`"
   | Bang -> "`!`"
+  | LessThanEqual -> "`<=`"
+  | GreaterThanEqual -> "`>=`"
 
   (* Other *)
   | ID -> "`ID`"
