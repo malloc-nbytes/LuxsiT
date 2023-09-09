@@ -138,7 +138,7 @@ and parse_expr (p : parser_t) : parser_t * node_expr_t =
   let p, expr = parse_add_expr p in
   p, expr
 
-let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
+and parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
   let p, t = eat p in
   let constant = t.tokentype = Token.Const in
   let p, id = expect p Token.ID in
@@ -152,7 +152,7 @@ let parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
     let p, _ = expect p Token.SemiColon in
     p, NodeStmtVarDecl { id; expr = Some expr; constant }
 
-let rec parse_stmts (p : parser_t) : parser_t * node_stmt_t list =
+and parse_stmts (p : parser_t) : parser_t * node_stmt_t list =
   match at p with
   | t when t.tokentype = Token.End -> p, []
   | _ ->
@@ -175,18 +175,18 @@ and parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtPrintln { expr }
   | t when t.tokentype = Token.ID ->
-      let p, id = eat p in
-      let p, _ = expect p Token.Assignment in
-      let p, expr = parse_expr p in
-      let p, _ = expect p Token.SemiColon in
-      p, NodeStmtMutateVar { id; expr }
+     let p, id = eat p in
+     let p, _ = expect p Token.Assignment in
+     let p, expr = parse_expr p in
+     let p, _ = expect p Token.SemiColon in
+     p, NodeStmtMutateVar { id; expr }
   | t when t.tokentype = Token.If ->
-      let p, _ = eat p in
-      let p, expr = parse_expr p in
-      let p, _ = expect p Token.Then in
-      let p, stmts = parse_stmts p in
-      let p, _ = expect p Token.End in
-      p, NodeStmtIf { expr; stmts }
+     let p, _ = eat p in
+     let p, expr = parse_expr p in
+     let p, _ = expect p Token.Then in
+     let p, stmts = parse_stmts p in
+     let p, _ = expect p Token.End in
+     p, NodeStmtIf { expr; stmts }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
      failwith "parser error"

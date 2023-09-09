@@ -36,6 +36,8 @@ type tokentype_t =
   | ForwardSlash
   | Asterisk
   | Bang
+  | LessThanEqual
+  | GreaterThanEqual
 
   (* Other *)
   | ID

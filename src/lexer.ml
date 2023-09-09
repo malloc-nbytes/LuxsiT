@@ -6,7 +6,6 @@ let symbols : (char, Token.tokentype_t) Hashtbl.t = Hashtbl.create 15
 
 let keywords : (string, Token.tokentype_t) Hashtbl.t = Hashtbl.create 20
 
-
 let populate_symbols () : unit =
   let _ = Hashtbl.add symbols '(' Token.LParen in
   let _ = Hashtbl.add symbols ')' Token.RParen in
@@ -14,12 +13,10 @@ let populate_symbols () : unit =
   let _ = Hashtbl.add symbols ',' Token.Comma in
   let _ = Hashtbl.add symbols '+' Token.Plus in
   let _ = Hashtbl.add symbols '*' Token.Asterisk in
-  (* let _ = Hashtbl.add symbols '-' Token.Hyphen in *)
   let _ = Hashtbl.add symbols '/' Token.ForwardSlash in
-  let _ = Hashtbl.add symbols '<' Token.LessThan in
-  let _ = Hashtbl.add symbols '>' Token.GreaterThan in
+  (* let _ = Hashtbl.add symbols '<' Token.LessThan in
+  let _ = Hashtbl.add symbols '>' Token.GreaterThan in *)
   ()
-
 
 let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "let" Token.Let in
@@ -39,29 +36,23 @@ let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "const" Token.Const in
   ()
 
-
 let lexer_create tokens : lexer_t =
   { tokens = tokens }
-
 
 let isalpha c : bool =
   let c = int_of_char c in
   (c >= 65 && c <= 90) || (c >= 97 && c <= 122)
-
 
 let isnum c : bool =
   let c = int_of_char c in
   let c = c - int_of_char '0' in
   (c >= 0) && (c <= 9)
 
-
 let isalnum c : bool =
   isalpha c || isnum c
 
-
 let isignorable c : bool =
   c = ' ' || c = '\n' || c = '\t'
-
 
 (* Will consume characters given the predicate `cond`.
    Will NOT consume the character that fails `cond`.
@@ -74,18 +65,15 @@ let consume_while lst (cond : 'a -> 'b) : string * char list =
     | hd :: tl -> acc, hd :: tl in
   aux lst ""
 
-
 (* Checks if a string is one of the reserved keywords. *)
 let is_keyword str : Token.tokentype_t option =
   try Some (Hashtbl.find keywords str)
   with Not_found -> None
 
-
 (* Checks if a string is one of the reserved symbols. *)
 let is_symbol c : Token.tokentype_t option =
   try Some (Hashtbl.find symbols c)
   with Not_found -> None
-
 
 (* Peek `ahead` amount of spaces in the characters. *)
 let peek lst ahead : char option =
@@ -95,7 +83,6 @@ let peek lst ahead : char option =
     | hd :: _ when i = ahead -> Some hd
     | _ :: tl -> peek' tl (i + 1) in
   peek' lst 0
-
 
 (* Create tokens from a string. *)
 let lex_tokens src : lexer_t =
@@ -139,6 +126,18 @@ let lex_tokens src : lexer_t =
               (* (List.tl rest) to consume extra quote *)
               lex_tokens' (List.tl rest) (acc @ [Token.token_create_wstr str Token.StringLiteral])
 
+            else if hd = '>' then
+              match peek tl 0 with
+              | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr ">=" Token.GreaterThanEqual])
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.GreaterThan])
+              | None -> failwith "Lexer ERR: found `None` when parsing `>`"
+            
+            else if hd = '<' then
+              match peek tl 0 with
+              | Some k when k = '=' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr ">=" Token.LessThanEqual])
+              | Some k -> lex_tokens' tl (acc @ [Token.token_create_wchar hd Token.LessThan])
+              | None -> failwith "Lexer ERR: found `None` when parsing `>`"
+
             else if hd = ':' then (* Colon or DoubleColon `::` token. *)
               match peek tl 0 with
               | Some k when k = ':' -> lex_tokens' (List.tl tl) (acc @ [Token.token_create_wstr "::" Token.DoubleColon])
@@ -157,7 +156,6 @@ let lex_tokens src : lexer_t =
   let _ = populate_keywords () in
   let _ = populate_symbols () in
   lex_tokens' (src |> String.to_seq |> List.of_seq) []
-
 
 (* Print everything in the lexer. Used for debugging. *)
 let lexer_dump lexer : unit =
