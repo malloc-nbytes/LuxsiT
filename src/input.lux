@@ -1,10 +1,12 @@
 let x = 1;
+let y = 2;
 
-if x == 1 then
-  let scope1 = 99;
-  if scope1 == 99 then
-    let scope2 = 100;
-  end
+x = x + 2;
+y = 3 - 1;
+
+if !x then
+  x = 99;
+  println(x);
 end
 
-exit x;
+println(x);

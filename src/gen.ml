@@ -170,6 +170,7 @@ let gen_term (gen : gen_t) (term : node_term_t) : gen_t =
      push { gen with output = output } "rax"
 
 (* TODO: refactor *)
+(* TODO: <= and >= do not always function correct when (expr) <= (expr) or (expr) >= (expr). *)
 let rec gen_expr (gen : gen_t) (expr : node_expr_t) : gen_t =
   match expr with
   | NodeTerm term -> gen_term gen term
