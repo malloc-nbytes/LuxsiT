@@ -37,8 +37,8 @@ section .rodata
 type gen_t =
   { output     : string
   ; stackptr   : int
-  ; vars       : (string, var_t) Hashtbl.t
-  ; const_vars : (string, var_t) Hashtbl.t
+  ; vars       : (string, var_t) Hashtbl.t list
+  ; const_vars : (string, var_t) Hashtbl.t list
   }
 
 let counter : int ref = ref 0
@@ -80,38 +80,67 @@ let asm_header =
   "_start:\n"
 
 let var_exists (gen : gen_t) (name : string) : bool =
-  Hashtbl.mem gen.vars name || Hashtbl.mem gen.const_vars name
+  List.exists (fun table -> Hashtbl.mem table name) gen.vars || List.exists (fun table -> Hashtbl.mem table name) gen.const_vars
 
 let const_var_exists (gen : gen_t) (name : string) : bool =
-  Hashtbl.mem gen.const_vars name
+  List.exists (fun table -> Hashtbl.mem table name) gen.const_vars
 
 let get_var (gen : gen_t) (name : string) : var_t option =
-  if Hashtbl.mem gen.vars name then
-    Some (Hashtbl.find gen.vars name)
-  else if Hashtbl.mem gen.const_vars name then
-    Some (Hashtbl.find gen.const_vars name)
-  else
-    None
+  let rec search_tables tables =
+    match tables with
+    | [] -> None
+    | table :: rest ->
+        if Hashtbl.mem table name then
+          Some (Hashtbl.find table name)
+        else
+          search_tables rest
+  in
+  search_tables gen.vars
 
 let get_mut_var (gen : gen_t) (name : string) : var_t option =
-  if Hashtbl.mem gen.vars name then
-    Some (Hashtbl.find gen.vars name)
-  else
-    None
+  let rec search_tables tables =
+    match tables with
+    | [] -> None
+    | table :: rest ->
+        if Hashtbl.mem table name then
+          Some (Hashtbl.find table name)
+        else
+          search_tables rest
+  in
+  search_tables gen.vars
 
 let get_const_var (gen : gen_t) (name : string) : var_t option =
-  if Hashtbl.mem gen.const_vars name then
-    Some (Hashtbl.find gen.const_vars name)
-  else
-    None
+  let rec search_tables tables =
+    match tables with
+    | [] -> None
+    | table :: rest ->
+        if Hashtbl.mem table name then
+          Some (Hashtbl.find table name)
+        else
+          search_tables rest
+  in
+  search_tables gen.const_vars
 
 let insert_var (gen : gen_t) (name : string) : unit =
   let v = { stackloc = gen.stackptr } in
-  Hashtbl.add gen.vars name v
+  match gen.vars with
+  | [] -> failwith "gen error: No variable symbol table on the stack"
+  | table :: _ -> Hashtbl.add table name v
 
 let insert_const_var (gen : gen_t) (name : string) : unit =
   let v = { stackloc = gen.stackptr } in
-  Hashtbl.add gen.const_vars name v
+  match gen.const_vars with
+  | [] -> failwith "gen error: No constant variable symbol table on the stack"
+  | table :: _ -> Hashtbl.add table name v
+
+let push_empty_var_table (gen : gen_t) : gen_t =
+  let empty_table : (string, var_t) Hashtbl.t = Hashtbl.create 20 in
+  { gen with vars = empty_table :: gen.vars }
+
+let pop_var_table (gen : gen_t) : gen_t =
+  match gen.vars with
+  | [] -> failwith "gen error: No variable symbol table to pop"
+  | _ :: rest -> { gen with vars = rest }
 
 let push (gen : gen_t) (register : string) : gen_t =
   let output = gen.output in
@@ -274,14 +303,15 @@ let rec generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
      let gen = pop ({ gen with output = output }) "rdi" in
      { gen with output = gen.output ^ "    syscall\n" }
   | NodeStmtIf node_stmt_if ->
+    let gen = push_empty_var_table gen in (* Start new scope. *)
     let true_branch_label = "if_true_" ^ string_of_int !counter in
     let end_label = "if_end_" ^ string_of_int !counter in
     let _ = counter := !counter + 1 in
-  
+
     (* Generate code for the condition expression *)
     let gen = gen_expr gen node_stmt_if.expr in
     let gen = pop gen "rdi" in
-  
+
     (* Compare the result with zero and jump to the true branch if true *)
     let output =
       gen.output ^
@@ -290,20 +320,21 @@ let rec generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
       "    jmp " ^ true_branch_label ^ "\n" ^
       true_branch_label ^ ":\n"
     in
-  
+
     let gen = { gen with output = output } in
-  
+
     (* Generate code for the true branch *)
     let gen = iter_prog_stmts gen node_stmt_if.stmts in
   
     (* Unconditional jump to the end of the if statement *)
     let output = gen.output ^ "    jmp " ^ end_label ^ "\n" in
     let gen = { gen with output = output } in
-  
+
     (* Generate code for the false branch (if it exists) *)
     let output = gen.output ^ end_label ^ ":\n" in
+    let gen = pop_var_table gen in (* End scope. *)
     { gen with output = output }
-    
+
   | NodeStmtMutateVar stmt_mutate_var ->
       let _ = if const_var_exists gen stmt_mutate_var.id.data then
                 let _ = Err.err ("cannot mutate constant variable " ^ stmt_mutate_var.id.data) in
@@ -353,8 +384,8 @@ and iter_prog_stmts (gen : gen_t) (lst : node_stmt_t list) : gen_t =
 let generate_program (program : node_prog_t) : string =
   let gen = { output     = asm_header
             ; stackptr   = 0
-            ; vars       = Hashtbl.create 20
-            ; const_vars = Hashtbl.create 20 
+            ; vars       = Hashtbl.create 20 :: []
+            ; const_vars = Hashtbl.create 20 :: []
             } in
 
   let gen = iter_prog_stmts gen program.stmts in

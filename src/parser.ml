@@ -55,9 +55,8 @@ and node_stmt_println_t =
   { expr : node_expr_t
   }
 
-type parser_t =
-  { tokens : Token.token_t list
-  }
+and parser_t =
+  { tokens : Token.token_t list }
 
 let parser_create tokens : parser_t =
   { tokens }
