@@ -4,7 +4,7 @@ let y = 2;
 x = x + 2;
 y = 3 - 1;
 
-if !x then
+if x then
   x = 99;
   println(x);
 end

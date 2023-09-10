@@ -1,4 +1,3 @@
 (* TODO: custom error types. *)
-
-let err msg : unit =
+let err msg =
   Printf.printf "(ERR) %s\n" msg

@@ -36,22 +36,22 @@ let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "const" Token.Const in
   ()
 
-let lexer_create tokens : lexer_t =
+let lexer_create tokens =
   { tokens = tokens }
 
-let isalpha c : bool =
+let isalpha c =
   let c = int_of_char c in
   (c >= 65 && c <= 90) || (c >= 97 && c <= 122)
 
-let isnum c : bool =
+let isnum c =
   let c = int_of_char c in
   let c = c - int_of_char '0' in
   (c >= 0) && (c <= 9)
 
-let isalnum c : bool =
+let isalnum c =
   isalpha c || isnum c
 
-let isignorable c : bool =
+let isignorable c =
   c = ' ' || c = '\n' || c = '\t'
 
 (* Will consume characters given the predicate `cond`.
@@ -66,17 +66,17 @@ let consume_while lst (cond : 'a -> 'b) : string * char list =
   aux lst ""
 
 (* Checks if a string is one of the reserved keywords. *)
-let is_keyword str : Token.tokentype_t option =
+let is_keyword str =
   try Some (Hashtbl.find keywords str)
   with Not_found -> None
 
 (* Checks if a string is one of the reserved symbols. *)
-let is_symbol c : Token.tokentype_t option =
+let is_symbol c =
   try Some (Hashtbl.find symbols c)
   with Not_found -> None
 
 (* Peek `ahead` amount of spaces in the characters. *)
-let peek lst ahead : char option =
+let peek lst ahead =
   let rec peek' lst i : char option =
     match lst with
     | [] -> None
@@ -85,7 +85,7 @@ let peek lst ahead : char option =
   peek' lst 0
 
 (* Create tokens from a string. *)
-let lex_tokens src : lexer_t =
+let lex_tokens src =
   let rec lex_tokens' lst acc : lexer_t =
     match lst with
     | [] -> lexer_create (acc @ [Token.token_create_wstr "EOF" Token.EOF])
@@ -158,7 +158,7 @@ let lex_tokens src : lexer_t =
   lex_tokens' (src |> String.to_seq |> List.of_seq) []
 
 (* Print everything in the lexer. Used for debugging. *)
-let lexer_dump lexer : unit =
+let lexer_dump lexer =
   List.iter (fun token ->
       Printf.printf "[Lexer] %s\n"
         (Token.tokentype_tostr token.Token.tokentype)

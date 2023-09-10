@@ -20,4 +20,4 @@ if [[ "$1" != "-o" ]]; then
     mv *.cmo *.cmi obj/
 fi
 
-./bin/main
+./bin/main ./input.lux ./output
