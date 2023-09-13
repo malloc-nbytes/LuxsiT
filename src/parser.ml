@@ -153,7 +153,7 @@ and parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
 
 and parse_stmts (p : parser_t) : parser_t * node_stmt_t list =
   match at p with
-  | t when t.tokentype = Token.End -> p, []
+  | t when t.tokentype = Token.SemiColon -> p, []
   | _ ->
      let p, stmt = parse_stmt p in
      let p, stmts = parse_stmts p in
@@ -184,7 +184,7 @@ and parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, expr = parse_expr p in
      let p, _ = expect p Token.Then in
      let p, stmts = parse_stmts p in
-     let p, _ = expect p Token.End in
+     let p, _ = expect p Token.SemiColon in
      p, NodeStmtIf { expr; stmts }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
