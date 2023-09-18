@@ -1,11 +1,12 @@
-let x = 5;
-let y = 3;
+let x = 1;
+let y = 2;
 
-if x > y then
-  let tmp = 88;
-  if x != y then
-    println tmp;
+println x + (y * 2 + (4 / 2));
+
+if x < y then
+  if x == y then
+    println 99;
   ;
 ;
 
-exit 0;
+exit x;
