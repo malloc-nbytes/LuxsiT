@@ -9,6 +9,7 @@ type tokentype_t =
 
   (* Keywords *)
   | Let
+  | While
   | Then
   | If
   | End
@@ -70,6 +71,7 @@ let tokentype_tostr tokentype : string =
 
   (* Keywords *)
   | Let -> "`let`"
+  | While -> "`While`"
   | If -> "`if`"
   | Then -> "`then`"
   | Struct -> "`struct`"

@@ -1,12 +1,7 @@
-let x = 1;
-let y = 2;
+let x = 0;
 
-println x + (y * 2 + (4 / 2));
-
-if x < y then
-  if x == y then
-    println 99;
-  ;
+while x < 10 do
+  println x;
 ;
 
-exit x;
+exit 0;

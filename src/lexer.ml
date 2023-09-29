@@ -20,6 +20,7 @@ let populate_symbols () : unit =
 
 let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "let" Token.Let in
+  let _ = Hashtbl.add keywords "while" Token.While in
   let _ = Hashtbl.add keywords "if" Token.If in
   let _ = Hashtbl.add keywords "then" Token.Then in
   let _ = Hashtbl.add keywords "str" Token.Str in
@@ -77,7 +78,7 @@ let is_symbol c =
 
 (* Peek `ahead` amount of spaces in the characters. *)
 let peek lst ahead =
-  let rec peek' lst i : char option =
+  let rec peek' lst i =
     match lst with
     | [] -> None
     | hd :: _ when i = ahead -> Some hd
@@ -86,7 +87,7 @@ let peek lst ahead =
 
 (* Create tokens from a string. *)
 let lex_tokens src =
-  let rec lex_tokens' lst acc : lexer_t =
+  let rec lex_tokens' lst acc =
     match lst with
     | [] -> lexer_create (acc @ [Token.token_create_wstr "EOF" Token.EOF])
     | hd :: tl when isignorable hd -> lex_tokens' tl acc
