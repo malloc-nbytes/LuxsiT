@@ -21,6 +21,7 @@ let populate_symbols () : unit =
 let populate_keywords () : unit =
   let _ = Hashtbl.add keywords "let" Token.Let in
   let _ = Hashtbl.add keywords "while" Token.While in
+  let _ = Hashtbl.add keywords "do" Token.Do in
   let _ = Hashtbl.add keywords "if" Token.If in
   let _ = Hashtbl.add keywords "then" Token.Then in
   let _ = Hashtbl.add keywords "str" Token.Str in
