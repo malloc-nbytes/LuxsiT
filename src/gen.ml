@@ -336,6 +336,39 @@ let rec generate_stmt (gen : gen_t) (stmt : Parser.node_stmt_t) : gen_t =
     let gen = pop_var_table gen in (* End scope. *)
     { gen with output = output }
 
+  | NodeStmtWhile stmt_while ->
+    let gen = push_empty_var_table gen in (* Start new scope. *)
+    let start_label = "while_start_" ^ string_of_int !counter in
+    let end_label = "while_end_" ^ string_of_int !counter in
+    let _ = counter := !counter + 1 in
+
+    (* Generate code for the condition expression *)
+    let output = gen.output ^ start_label ^ ":\n" in
+    let gen = { gen with output = output } in
+    let gen = gen_expr gen stmt_while.expr in
+    let gen = pop gen "rdi" in
+
+    (* Compare the result with zero and jump to the end if true *)
+    let output =
+      gen.output ^
+      "    cmp rdi, 0\n" ^
+      "    je " ^ end_label ^ "\n"
+    in
+
+    let gen = { gen with output = output } in
+
+    (* Generate code for the body *)
+    let gen = iter_prog_stmts gen stmt_while.stmts in
+
+    (* Unconditional jump to the start of the while loop *)
+    let output = gen.output ^ "    jmp " ^ start_label ^ "\n" in
+    let gen = { gen with output = output } in
+
+    (* Generate code for the end of the while loop *)
+    let output = gen.output ^ end_label ^ ":\n" in
+    let gen = pop_var_table gen in (* End scope. *)
+    { gen with output = output }
+
   | NodeStmtMutateVar stmt_mutate_var ->
       let _ = if const_var_exists gen stmt_mutate_var.id.data then
                 let _ = Err.err ("cannot mutate constant variable " ^ stmt_mutate_var.id.data) in

@@ -4,6 +4,7 @@ type node_stmt_t =
   | NodeStmtPrintln   of node_stmt_println_t
   | NodeStmtMutateVar of node_stmt_mutate_var_t
   | NodeStmtIf        of node_if_t
+  | NodeStmtWhile     of node_while_t
 
 and node_term_t =
   | NodeTermID     of node_term_id_t
@@ -20,6 +21,11 @@ and node_bin_expr_t =
   }
 
 and node_if_t =
+  { expr  : node_expr_t
+  ; stmts : node_stmt_t list
+  }
+
+and node_while_t =
   { expr  : node_expr_t
   ; stmts : node_stmt_t list
   }
@@ -186,6 +192,13 @@ and parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, stmts = parse_stmts p in
      let p, _ = expect p Token.SemiColon in
      p, NodeStmtIf { expr; stmts }
+  | t when t.tokentype = Token.While ->
+     let p, _ = eat p in
+     let p, expr = parse_expr p in
+     let p, _ = expect p Token.Do in
+     let p, stmts = parse_stmts p in
+     let p, _ = expect p Token.SemiColon in
+      p, NodeStmtWhile { expr; stmts }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
      failwith "parser error"
