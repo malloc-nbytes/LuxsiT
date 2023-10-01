@@ -68,3 +68,17 @@ while x < 10 do
 
 exit 0;
 ```
+
+### Nested Statments
+```
+let x = 0;
+
+while x < 10 do
+  if x < 5 then
+    println x;
+  ;
+  x = x + 1;
+;
+
+exit 0;
+```
