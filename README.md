@@ -50,7 +50,7 @@ let x = 1;
 if x < 5 then
   let tmp = 34;
   println tmp;
-;
+end
 
 exit x;
 ```
@@ -64,7 +64,7 @@ let x = 0;
 while x < 10 do
   println x;
   x = x + 1;
-;
+end
 
 exit 0;
 ```
@@ -76,9 +76,9 @@ let x = 0;
 while x < 10 do
   if x < 5 then
     println x;
-  ;
+  end
   x = x + 1;
-;
+end
 
 exit 0;
 ```
