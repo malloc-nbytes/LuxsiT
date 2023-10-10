@@ -30,6 +30,6 @@ $\begin{cases}
 
 =Term= \rightarrow
 $\begin{cases}
-\mathbb{Z} \\
+\in \mathbb{Z} \\
 \text{ID}
 \end{cases}$
