@@ -1,4 +1,0 @@
-#+title: Resources
-
-/Virtual method tables/:
-  - https://en.wikipedia.org/wiki/Virtual_method_table

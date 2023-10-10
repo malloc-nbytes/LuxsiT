@@ -1,0 +1,33 @@
+#+TITLE: Grammar
+
+* Rules
+
+=Program= \rightarrow =[Stmt]=, $\mathcal{P}$ =Program= \ge 1
+
+=Stmt= \rightarrow
+$\begin{cases}
+\textit{exit } \texttt{Expr} \\
+\textit{let } \text{ID } = \texttt{Expr} \\
+\textit{if } \texttt{expr } \textit{then } \texttt{[Stmt] } \textit{end}, & \text{where } \mathcal{P} \texttt{[Stmt]} \ge 0 \\
+\textit{while } \texttt{expr } \textit{do } \texttt{[Stmt] } \textit{end}, & \text{where } \mathcal{P} \texttt{[Stmt]} \ge 0
+\end{cases}$
+
+=Expr= \rightarrow
+$\begin{cases}
+\texttt{Term} \\
+\texttt{BinaryExpr}
+\end{cases}$
+
+=BinaryExpr= \rightarrow
+$\begin{cases}
+\texttt{expr} + \texttt{expr} \\
+\texttt{expr} - \texttt{expr} \\
+\texttt{expr} * \texttt{expr} \\
+\texttt{expr } / \texttt{ expr}
+\end{cases}$
+
+=Term= \rightarrow
+$\begin{cases}
+\mathbb{Z} \\
+\text{ID}
+\end{cases}$
