@@ -4,14 +4,14 @@
 
 * Rules
 
-=Program= \rightarrow =[Stmt]=, $\mathcal{P}$ =Program= \ge 1
+=Program= \rightarrow =[Stmt]=, | =Program= | \ge 1
 
 =Stmt= \rightarrow
 $\begin{cases}
 \textit{exit } \texttt{Expr} \\
 \textit{let } \text{ID } = \texttt{Expr} \\
-\textit{if } \texttt{expr } \textit{then } \texttt{[Stmt] } \textit{end}, & \text{where } \mathcal{P} \texttt{[Stmt]} \ge 0 \\
-\textit{while } \texttt{expr } \textit{do } \texttt{[Stmt] } \textit{end}, & \text{where } \mathcal{P} \texttt{[Stmt]} \ge 0
+\textit{if } \texttt{expr } \textit{then } \texttt{[Stmt] } \textit{end}, & \text{where } | \texttt{[Stmt]} | \ge 0 \\
+\textit{while } \texttt{expr } \textit{do } \texttt{[Stmt] } \textit{end}, & \text{where } | \texttt{[Stmt]} | \ge 0
 \end{cases}$
 
 =Expr= \rightarrow
