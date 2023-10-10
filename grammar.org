@@ -1,5 +1,7 @@
 #+TITLE: Grammar
 
+[NOTE]: Open the associated /grammar.html/ document to view the grammar correctly.
+
 * Rules
 
 =Program= \rightarrow =[Stmt]=, $\mathcal{P}$ =Program= \ge 1
