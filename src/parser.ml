@@ -160,6 +160,7 @@ and parse_var_decl (p : parser_t) : parser_t * node_stmt_t =
 and parse_stmts (p : parser_t) : parser_t * node_stmt_t list =
   match at p with
   | t when t.tokentype = Token.SemiColon -> p, []
+  | t when t.tokentype = Token.End -> p, []
   | _ ->
      let p, stmt = parse_stmt p in
      let p, stmts = parse_stmts p in
@@ -190,14 +191,14 @@ and parse_stmt (p : parser_t) : parser_t * node_stmt_t =
      let p, expr = parse_expr p in
      let p, _ = expect p Token.Then in
      let p, stmts = parse_stmts p in
-     let p, _ = expect p Token.SemiColon in
+     let p, _ = expect p Token.End in
      p, NodeStmtIf { expr; stmts }
   | t when t.tokentype = Token.While ->
      let p, _ = eat p in
      let p, expr = parse_expr p in
      let p, _ = expect p Token.Do in
      let p, stmts = parse_stmts p in
-     let p, _ = expect p Token.SemiColon in
+     let p, _ = expect p Token.End in
       p, NodeStmtWhile { expr; stmts }
   | _ ->
      let _ = Err.err ("unexpected token " ^ (at p).data) in
@@ -210,7 +211,7 @@ let parse_program (tokens : Token.token_t list) : node_prog_t =
     match p.tokens with
     | [] -> program
     | hd :: _ when hd.tokentype = Token.EOF -> program
-    | _ -> 
+    | _ ->
        let p, stmt = parse_stmt p in
        produce_program p { stmts = program.stmts @ [stmt] }
   in

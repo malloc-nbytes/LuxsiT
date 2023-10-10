@@ -3,6 +3,6 @@ let x = 0;
 while x < 10 do
   println x;
   x = x + 1;
-;
+end
 
 exit 0;
