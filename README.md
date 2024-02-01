@@ -1,5 +1,7 @@
 # Let there be Light
 
+# PROJECT IS DEPRECATED. SEE https://github.com/malloc-nbytes/Score FOR THE NEW PROJECT.
+
 `Lux sit.`
 
 LuxsiT is a compiled language written in OCaml. It compiles down to x86_64 Nasm Assembly.
